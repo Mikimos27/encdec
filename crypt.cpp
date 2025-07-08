@@ -24,13 +24,26 @@ int main(){
     for(int i = 0; i < length; i++){
         in[i] = (unsigned char)from[i];
     }
-    unsigned char out[length];
-    aes.encrypt(in, out, length);
+    unsigned char cipher[length];
+    aes.encrypt(in, cipher, length);
 
-    print_hex("ciphertext", out, length);
+    print_hex("ciphertext", cipher, length);
     print_hex("tag", aes.get_tag(), AES_256_GCM_key::get_taglen());
     print_hex("iv", aes.get_iv(), AES_256_GCM_key::get_ivlen());
     print_hex("key", aes.get_key(), AES_256_GCM_key::get_keylen());
+
+
+    unsigned char out[length] = {0};
+    char outch[length] = {0};
+
+
+    aes.decrypt(cipher, out, length);
+    
+    for(int i = 0; i < length; i++){
+        outch[i] = (char)out[i];
+    }
+    std::cout << "Decrypted: " << outch << '\n';
+
 
     return 0;
 }

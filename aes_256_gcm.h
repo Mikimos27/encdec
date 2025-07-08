@@ -20,8 +20,8 @@ public:
 
     void genIV();
 
-    void encrypt(const unsigned char* plain, unsigned char* ciphertext, int length);
-    std::string decrypt(const std::string& ciphertext);
+    void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
+    void decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int length);
    
     const unsigned char* get_tag();
     const unsigned char* get_key();

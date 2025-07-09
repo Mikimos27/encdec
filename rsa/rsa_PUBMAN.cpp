@@ -1,8 +1,8 @@
-void RSA_PSS_keys::load_pubPEM(const char* filepath){
+void RSA_keys::load_pubPEM(const char* filepath){
 
 }
 
-void RSA_PSS_keys::write_pubPEM(const char* filepath){
+void RSA_keys::write_pubPEM(const char* filepath){
     std::FILE* fp = std::fopen(filepath, "w");
 
     PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
@@ -10,16 +10,16 @@ void RSA_PSS_keys::write_pubPEM(const char* filepath){
     std::fclose(fp);
 }
 
-void RSA_PSS_keys::load_pubDER(const char* filepath){
+void RSA_keys::load_pubDER(const char* filepath){
 
 }
 
 
-void RSA_PSS_keys::write_pubDER(const char* filepath){
+void RSA_keys::write_pubDER(const char* filepath){
 
 }
 
-EVP_PKEY* RSA_PSS_keys::_extract_pub(EVP_PKEY* keypair){
+EVP_PKEY* RSA_keys::_extract_pub(EVP_PKEY* keypair){
     if (!keypair)
         return NULL;
 

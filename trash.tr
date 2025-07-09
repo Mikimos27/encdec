@@ -1,50 +1,5 @@
-        const unsigned char* plaintext = (unsigned char*)plaintextin;
-        EVP_CIPHER_CTX* ctx = nullptr;
-        EVP_CIPHER* cipher = nullptr;
-        int len, out_len;
-        int plen = std::strlen((char*)plaintext);
-        unsigned char* ciphertext = new unsigned char[plen];
+Even when you use "RSA" for key generation, you can still perform RSA-PSS signing by setting the padding mode during signing:
 
-        ctx = EVP_CIPHER_CTX_new();
-        cipher = EVP_CIPHER_fetch(NULL, "AES-256-GCM", NULL);
-        genIV();
+EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING);
 
-        if(!ctx || !cipher){
-            return "BAD";
-        }
-
-        int taglen = TAGLEN;
-        int ivlen = IVLEN;
-        OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
-            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_AEAD_TAGLEN, &taglen),
-            OSSL_PARAM_END
-        };
-
-        if(!EVP_EncryptInit_ex2(ctx, cipher, key, iv, params)){
-            std::perror("Init failed\n");
-        }
-        if(!EVP_EncryptUpdate(ctx, NULL, &len, aad, sizeof(aad) - 1)){
-            std::perror("AAD failed\n");
-        }
-        if(!EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plen)){
-            std::perror("Update failed\n");
-        }
-        out_len = len;
-        if(!EVP_EncryptFinal_ex(ctx, ciphertext + out_len, &len)){
-            std::perror("Final failed\n");
-        }
-
-        OSSL_PARAM get_params[] = {
-            OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, tag, TAGLEN),
-            OSSL_PARAM_END
-        };
-
-        if (!EVP_CIPHER_CTX_get_params(ctx, get_params)){
-
-        }
-        
-        std::string ret{(char*)ciphertext};
-
-        delete[] ciphertext;
-
+So, "RSA" keys are more flexible, while "RSA-PSS" keys are more strict and safe for signature-only use cases.

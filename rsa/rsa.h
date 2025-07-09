@@ -1,14 +1,14 @@
-#ifndef RSA_PSS_H
-#define RSA_PSS_H
+#ifndef RSA_H
+#define RSA_H
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <string>
 
 
-class RSA_PSS_keys{
+class RSA_keys{
 public:
-    RSA_PSS_keys();
-    ~RSA_PSS_keys();
+    RSA_keys();
+    ~RSA_keys();
 
     void load_pubPEM(const char* filepath);
     void write_pubPEM(const char* filepath);
@@ -24,6 +24,12 @@ public:
     void get_key(EVP_PKEY** keys);
 
     void gen_key_pair(int keysize);
+    
+
+    void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int size);
+    void decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int size);
+    void sign(const unsigned char* msg, unsigned char* signature, int size);
+    int verify(const unsigned char* msg, const unsigned char* signature, int size);
 
 private:
     
@@ -32,6 +38,7 @@ private:
 
     EVP_PKEY* prv;
     EVP_PKEY* pub;
+    int keysize;
 };
 
 #endif

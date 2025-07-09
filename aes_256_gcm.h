@@ -1,20 +1,16 @@
 #ifndef AES_256_GCM_H
 #define AES_256_GCM_H
 
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
-#include <openssl/core_names.h>
-#include <cstdio>
 #include <cstddef>
-#include <string>
-#include <cstring>
-#include <memory>
-
 
 class AES_256_GCM_key{
 public:
+    static constexpr size_t KEYLEN = 32;
+    static constexpr size_t TAGLEN = 16;
+    static constexpr size_t IVLEN = 12;
+
+
+
     AES_256_GCM_key(const char* aad);
     ~AES_256_GCM_key();
 
@@ -27,20 +23,10 @@ public:
     const unsigned char* get_key();
     const unsigned char* get_iv();
 
-    static constexpr int get_taglen(){
-        return TAGLEN;
-    }
-    static constexpr int get_keylen(){
-        return KEYLEN;
-    }
-    static constexpr int get_ivlen(){
-        return IVLEN;
-    }
+    void set_key(unsigned char (&arr)[KEYLEN]);
+    void set_iv(unsigned char (&arr)[IVLEN]);
 
 private:
-    static constexpr size_t KEYLEN = 32;
-    static constexpr size_t TAGLEN = 16;
-    static constexpr size_t IVLEN = 12;
     unsigned char key[KEYLEN];
     unsigned char iv[IVLEN];
     unsigned char tag[TAGLEN];

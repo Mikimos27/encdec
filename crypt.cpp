@@ -17,7 +17,11 @@ void print_hex(const char* name, const uchar* str, size_t len){
 }
 
 
-int main(){
+int main(int argc, char** argv){
+    if(argc > 1){
+        std::cerr << "Too many args\n";
+        return 1;
+    }
 
     std::string input;
     std::getline(std::cin, input);
@@ -25,7 +29,6 @@ int main(){
     uchar* in = new uchar[len]{0};
     uchar* cipher = new uchar[len]{0};
     uchar* out = new uchar[len]{0};
-    char* outch = new char[len]{0};
 
 
     AES_256_GCM_key aes("ExampleAAD");
@@ -43,15 +46,15 @@ int main(){
 
     aes.decrypt(cipher, out, len);
     
+    std::cout << "Decrypted: "; std::printf("\n");
     for(int i = 0; i < len; i++){
-        outch[i] = (char)out[i];
+        std::printf("%c", (char)out[i]);
     }
-    std::cout << "Decrypted: " << outch << '\n';
+    std::printf("\n");
 
 
     delete[] in;
     delete[] cipher;
     delete[] out;
-    delete[] outch;
     return 0;
 }

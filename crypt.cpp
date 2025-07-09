@@ -63,7 +63,8 @@ int main(int argc, char** argv){
 int main(){
     RSA_PSS_keys rsa;
     rsa.gen_key_pair(4092);
-    rsa.write_pubPEM("pub.pem", NULL);
+    rsa.write_pubPEM("pub.pem");
+    rsa.write_prvPEM("prv.pem", NULL);
 
     return 0;
 }

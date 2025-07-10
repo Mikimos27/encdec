@@ -1,5 +1,8 @@
 #include "aes/aes_256_gcm.h"
 #include "rsa/rsa.h"
+extern "C"{
+#include <openssl/pem.h>
+}
 #include <iostream>
 #include <cstdio>
 #include <cstddef>
@@ -61,11 +64,26 @@ int main(int argc, char** argv){
 }*/
 
 
-int main(){
+int main(int argc, char** argv){
+    int keysize = 4096;
+    if(argc < 2){
+        std::cout << "No key size given\nUsing default: 4096\n";
+    }
+    else keysize = std::stoi(argv[1]);
     RSA_keys rsa;
-    rsa.gen_key_pair(8192);
+    if(rsa.gen_key_pair(keysize) < 0){
+        std::cerr << "Keys can't be generated\n";
+        return 1;
+    }
     rsa.write_pubPEM("pub.pem");
     rsa.write_prvPEM("prv.pem", NULL);
+
+    RSA_keys from_file;
+    from_file.load_prvPEM("prv.pem", NULL);
+    //PEM_write_PrivateKey(stdout, from_file.get_key_prv(), NULL, NULL, 0, NULL, NULL);
+    //PEM_write_PUBKEY(stdout, from_file.get_key_pub());
+    from_file.write_prv_to(stdout, NULL);
+    from_file.write_pub_to(stdout);
 
     return 0;
 }

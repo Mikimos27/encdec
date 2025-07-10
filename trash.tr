@@ -3,3 +3,4 @@ Even when you use "RSA" for key generation, you can still perform RSA-PSS signin
 EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING);
 
 So, "RSA" keys are more flexible, while "RSA-PSS" keys are more strict and safe for signature-only use cases.
+                                                                                                        ~ChatGPT

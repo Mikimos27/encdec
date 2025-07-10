@@ -28,8 +28,8 @@ public:
 
     void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int size);
     void decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int size);
-    void sign(const unsigned char* msg, unsigned char* signature, int size);
-    int verify(const unsigned char* msg, const unsigned char* signature, int size);
+    void sign(const unsigned char* msg, int msgsize, unsigned char* signature);
+    int verify(const unsigned char* msg, int msgsize, const unsigned char* signature);
 
 private:
     

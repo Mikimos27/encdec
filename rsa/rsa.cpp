@@ -24,6 +24,7 @@ RSA_keys::~RSA_keys(){
 
 #include "rsa_PUBMAN.cpp"
 #include "rsa_PRVMAN.cpp"
+#include "rsa_crypto.cpp"
 
 
 

@@ -6,6 +6,7 @@ extern "C"{
 }
 #include <string>
 #include <cstdio>
+#include <cstddef>
 
 
 class RSA_keys{
@@ -28,16 +29,19 @@ public:
     void set_key_prv(EVP_PKEY** keys); //Takes ownership
     const EVP_PKEY* const get_key_prv();
 
-    void set_key_pub(EVP_PKEY** keys);
-    const EVP_PKEY* const get_key_pub(); //Takes ownership
+    void set_key_pub(EVP_PKEY** keys); //Takes ownership
+    const EVP_PKEY* const get_key_pub();
 
     int gen_key_pair(int keysize);
     
 
-    void encrypt(const unsigned char* plaintext, int size, unsigned char* ciphertext);
-    int decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int* size);
-    void sign(const unsigned char* msg, int msgsize, unsigned char* signature);
+    void encrypt(const unsigned char* plaintext, int msgsize);
+    void decrypt(const unsigned char* ciphertext);
+    void sign(const unsigned char* msg, int msgsize);
     int verify(const unsigned char* msg, int msgsize, const unsigned char* signature);
+
+    const unsigned char* const get_out_buff();
+    const std::size_t get_out_size();
 
 private:
     
@@ -47,6 +51,9 @@ private:
     EVP_PKEY* prv;
     EVP_PKEY* pub;
     int keysize;
+
+    unsigned char* out_buff;
+    std::size_t out_size;
 };
 
 #endif

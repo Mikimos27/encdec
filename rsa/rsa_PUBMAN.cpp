@@ -1,9 +1,15 @@
 void RSA_keys::load_pubPEM(const char* filepath){
-
+    std::FILE* fp = nullptr;
+    fp = std::fopen(filepath, "r");
+    if(fp == NULL){
+        throw std::invalid_argument("Can't open file");
+    }
 }
 
 void RSA_keys::write_pubPEM(const char* filepath){
     std::FILE* fp = std::fopen(filepath, "w");
+
+    if(!fp) std::invalid_argument("Bad filepath");
 
     PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
 
@@ -11,15 +17,31 @@ void RSA_keys::write_pubPEM(const char* filepath){
 }
 
 void RSA_keys::load_pubDER(const char* filepath){
+    std::FILE* fp = nullptr;
+    fp = std::fopen(filepath, "r");
+    if(fp == NULL){
+        throw std::invalid_argument("Can't open file");
+    }
+
 
 }
 
 
 void RSA_keys::write_pubDER(const char* filepath){
+    std::FILE* fp = nullptr;
+    fp = std::fopen(filepath, "w");
+    if(fp == NULL){
+        throw std::invalid_argument("Bad filepath");
+    }
+
 
 }
 
 void RSA_keys::write_pub_to(std::FILE* const fp){
+    if(fp == NULL){
+        throw std::invalid_argument("Can't open file");
+    }
+
     PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
 }
 
@@ -46,7 +68,7 @@ EVP_PKEY* RSA_keys::_extract_pub(EVP_PKEY* keypair){
         }
 
         // Import only the public components into a new EVP_PKEY
-        ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "RSA-PSS", NULL);  // or EC, etc.
+        ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);  // or EC, etc.
         if (!ctx_import){
             std::cerr << "Ctx failed\n";
             break;

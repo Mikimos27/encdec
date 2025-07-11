@@ -11,6 +11,7 @@ extern "C"{
 
 #include <string>
 #include <iostream>
+#include <exception>
 
 #include "rsa_PUBMAN.cpp"
 #include "rsa_PRVMAN.cpp"
@@ -20,11 +21,16 @@ RSA_keys::RSA_keys(){
     prv = EVP_PKEY_new();
     pub = EVP_PKEY_new();
     keysize = 0;
+    out_buff = nullptr;
+    out_size = 0;
 }
 RSA_keys::~RSA_keys(){
     if(prv != NULL) EVP_PKEY_free(prv);
     if(pub != NULL) EVP_PKEY_free(pub);
     keysize = 0;
+    delete[] out_buff;
+    out_buff = nullptr;
+    out_size = 0;
 }
 
 
@@ -32,6 +38,12 @@ void RSA_keys::set_key_prv(EVP_PKEY** keys){
     EVP_PKEY_free(prv);
     prv = *keys;
     *keys = nullptr;
+
+    keysize = EVP_PKEY_get_bits(prv);
+
+    delete[] out_buff;
+    out_buff = nullptr;
+    out_size = 0;
     _extract_pub(prv);
 }
 const EVP_PKEY* const RSA_keys::get_key_prv(){
@@ -40,8 +52,14 @@ const EVP_PKEY* const RSA_keys::get_key_prv(){
 
 void RSA_keys::set_key_pub(EVP_PKEY** keys){
     EVP_PKEY_free(pub);
+    EVP_PKEY_free(prv);
+    prv = nullptr;
     pub = *keys;
     *keys = nullptr;
+
+    delete[] out_buff;
+    out_buff = nullptr;
+    out_size = 0;
 }
 const EVP_PKEY* const RSA_keys::get_key_pub(){
     return pub;
@@ -52,6 +70,9 @@ int RSA_keys::gen_key_pair(int keysize){
         std::cerr << "Key size not divisible by 8\n";
         return -1;
     }
+    delete[] out_buff;
+    out_buff = nullptr;
+    out_size = 0;
     EVP_PKEY_CTX* ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
     unsigned int primes = 2;
@@ -92,7 +113,14 @@ int RSA_keys::gen_key_pair(int keysize){
 
     pub = _extract_pub(prv);
     this->keysize = keysize;
+
     return 0;
 }
 
 
+const unsigned char* const RSA_keys::get_out_buff(){
+    return out_buff;
+}
+const std::size_t RSA_keys::get_out_size(){
+    return this->out_size;
+}

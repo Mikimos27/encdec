@@ -36,7 +36,7 @@ public:
     
 
     void encrypt(const unsigned char* plaintext, int msgsize);
-    void decrypt(const unsigned char* ciphertext);
+    void decrypt(const unsigned char* ciphertext);//Check if ciphertext length is equal to the size of the key!!!!!!
     void sign(const unsigned char* msg, int msgsize);
     int verify(const unsigned char* msg, int msgsize, const unsigned char* signature);
 

@@ -48,6 +48,7 @@ private:
     
     EVP_PKEY* _extract_pub(EVP_PKEY* pkey);
     void _clear_buff();
+    void _free_key(EVP_PKEY** pkey);
 
 
     EVP_PKEY* prv;

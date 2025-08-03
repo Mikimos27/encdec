@@ -28,9 +28,7 @@ RSA_keys::~RSA_keys(){
     if(prv != NULL) EVP_PKEY_free(prv);
     if(pub != NULL) EVP_PKEY_free(pub);
     keysize = 0;
-    delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
     ERR_print_errors_fp(stderr);
 }
 
@@ -42,9 +40,7 @@ void RSA_keys::set_key_prv(EVP_PKEY** keys){
 
     keysize = EVP_PKEY_get_bits(prv);
 
-    delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
     _extract_pub(prv);
 }
 const EVP_PKEY* const RSA_keys::get_key_prv(){
@@ -58,22 +54,19 @@ void RSA_keys::set_key_pub(EVP_PKEY** keys){
     pub = *keys;
     *keys = nullptr;
 
-    delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
 }
 const EVP_PKEY* const RSA_keys::get_key_pub(){
     return pub;
 }
 
 int RSA_keys::gen_key_pair(int keysize){
+    if(keysize < 1024) throw std::logic_error("Key must be at least 1024 bits long, ideally equal or larger than 2048 bits");
     if(keysize % 8){
         std::cerr << "Key size not divisible by 8\n";
         return -1;
     }
-    delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
     EVP_PKEY_CTX* ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
     unsigned int primes = 2;
@@ -124,4 +117,13 @@ const unsigned char* const RSA_keys::get_out_buff(){
 }
 const std::size_t RSA_keys::get_out_size(){
     return this->out_size;
+}
+const std::size_t RSA_keys::get_ciph_size(){
+    return this->pub == nullptr ? 0 : EVP_PKEY_get_size(this->pub);
+}
+
+void RSA_keys::_clear_buff(){
+    if(out_buff) OPENSSL_free(out_buff);
+    out_buff = nullptr;
+    out_size = 0;
 }

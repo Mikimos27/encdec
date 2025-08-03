@@ -5,9 +5,7 @@ void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
     //OSSL_LIB_CTX* libctx = nullptr;
     std::size_t clen = 0;
 
-    if(out_buff) delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
     EVP_MD* md = nullptr;
 
     do{
@@ -53,7 +51,7 @@ void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
             std::cerr << "Encryption length check failed\n";
             break;
         }
-        out_buff = new unsigned char[clen];
+        out_buff = (unsigned char*)OPENSSL_malloc(clen);
         if(!EVP_PKEY_encrypt(ctx, out_buff, &clen, plaintext, msgsize)){
             std::cerr << "Encrypt failed\n";
             break;
@@ -75,15 +73,13 @@ void RSA_keys::decrypt(const unsigned char* ciphertext){
     EVP_PKEY_CTX* ctx = nullptr;
     std::size_t plen = 0;
 
-    if(out_buff) delete[] out_buff;
-    out_buff = nullptr;
-    out_size = 0;
+    _clear_buff();
     EVP_MD* md = nullptr;
 
     do{
         ctx = EVP_PKEY_CTX_new_from_pkey(NULL, this->prv, NULL);
         if(!ctx){
-            std::cerr << "Can't generate ctx for encryption\n";
+            std::cerr << "Can't generate ctx for decryption\n";
             break;
         }
         if(!EVP_PKEY_decrypt_init_ex(ctx, NULL)){
@@ -117,14 +113,23 @@ void RSA_keys::decrypt(const unsigned char* ciphertext){
             std::cerr << "Decryption length check failed\n";
             break;
         }
-        std::cout << "Comp: " << EVP_PKEY_get_size(prv) << ' ' << out_size << "\n";
-        //////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        out_buff = new unsigned char[plen];
+        out_buff = (unsigned char*)OPENSSL_malloc(plen);
+
         if(!EVP_PKEY_decrypt(ctx, out_buff, &plen, ciphertext, EVP_PKEY_get_size(prv))){
             std::cerr << "Decryption failed\n";
             break;
         }
-        //////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        //Trimming
+
+        unsigned char* temp = (unsigned char*)OPENSSL_malloc(plen);
+        for(std::size_t i = 0; i < plen; i++){
+            temp[i] = out_buff[i];
+        }
+        OPENSSL_free(out_buff);
+        out_buff = temp;
+        temp = nullptr;
+
 
         out_size = plen;
     }while(0);
@@ -136,7 +141,42 @@ void RSA_keys::decrypt(const unsigned char* ciphertext){
 }
 
 void RSA_keys::sign(const unsigned char* msg, int msgsize){
+    if(!this->prv)
+        throw std::logic_error("There is no private key set");
+    EVP_MD_CTX* ctx = nullptr;
+    std::size_t plen = 0;
 
+    _clear_buff();
+    EVP_MD* md = nullptr;
+
+
+    do{
+        ctx = EVP_MD_CTX_new();
+        if(!ctx){
+            std::cerr << "Can't generate ctx for signature\n";
+            break;
+        }
+        md = EVP_MD_fetch(NULL, "SHA256", NULL);
+        if(!md){
+            std::cerr << "Can't fetch sha256 for signature\n";
+            break;
+        }
+        //Use RSS-PSS padding !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        if(!EVP_DigestSignInit(ctx, NULL, md, NULL, pkey)){//Change to _ex for Openssl 3.0
+            std::cerr << "Sig init failed\n";
+            break
+        }
+        if(!EVP_DigestSignFinal(ctx, NULL, &out_size)){
+            std::cerr << "Sig get size failed\n";
+            break;
+        }
+        out_buff = (unsigned char*)OPENSSL_malloc(out_size);
+
+    }while(0);
+
+    EVP_MD_free(md);
+    EVP_MD_CTX_free(ctx);
 }
 
 int RSA_keys::verify(const unsigned char* msg, int msgsize, const unsigned char* signature){

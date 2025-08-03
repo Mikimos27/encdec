@@ -22,10 +22,6 @@ void print_hex(const char* name, const uchar* str, size_t len){
     std::printf("\n");
 }
 
-void setutu(const  uchar* const src, uchar* dst, int size){
-    for(int i = 0; i < size; i++) dst[i] = src[i];
-}
-
 /*
 int main(int argc, char** argv){
     if(argc > 1){
@@ -89,7 +85,7 @@ int main(int argc, char** argv){
         return 1;
     }
     rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", "e");
+    rsa.write_prvPEM("prv.pem", NULL);
 
 
     const char* msg = "Halo halo halo kurna";
@@ -97,16 +93,23 @@ int main(int argc, char** argv){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
     else msg = argv[2];
-    rsa.encrypt((const unsigned char*)msg, std::strlen(msg));
+    try{
+        rsa.encrypt((const unsigned char*)msg, std::strlen(msg));
+    }catch(const std::exception& E){
+        std::cout << E.what() << '\n';
+        return 1;
+    }
 
     int size = rsa.get_out_size();
     unsigned char* enc = new unsigned char[size];
-    setutu(rsa.get_out_buff(), enc, size);
+
+    std::memcpy(enc, rsa.get_out_buff(), rsa.get_out_size());
+    enc[rsa.get_out_size()] = 0;
+
     rsa.decrypt(enc);
 
     std::printf("%d\n", size);
     unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
-    //setutu(rsa.get_out_buff(), get, rsa.get_out_size());
     std::memcpy(get, rsa.get_out_buff(), rsa.get_out_size());
     get[rsa.get_out_size()] = 0;
     

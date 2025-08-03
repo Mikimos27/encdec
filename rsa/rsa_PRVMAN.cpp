@@ -7,10 +7,11 @@ void RSA_keys::load_prvPEM(const char* filepath, const char* passwd){
     }
 
     if(passwd){
-        PEM_read_PrivateKey_ex(fp, &this->prv, NULL, (unsigned char*)passwd, NULL, NULL);
+        if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, (unsigned char*)passwd, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
         OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
     }
-    else PEM_read_PrivateKey_ex(fp, &this->prv, NULL, NULL, NULL, NULL);
+    else if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, NULL, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
+
 
 
     std::fclose(fp);

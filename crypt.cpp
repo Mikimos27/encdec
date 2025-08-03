@@ -22,7 +22,6 @@ void print_hex(const char* name, const uchar* str, size_t len){
     std::printf("\n");
 }
 
-
 int test_aes(int argc, char** argv){
     if(argc > 1){
         std::cerr << "Too many args\n";
@@ -85,9 +84,20 @@ int test_rsa(int argc, char** argv){
 //        std::cerr << "Keys can't be generated\n";
 //        return 1;
 //    }
+    rsa.gen_key_pair(1024);
+    char p[2] = "a";
+    rsa.write_pubPEM("pub.pem");
+    rsa.write_prvPEM("prv.pem", p);
     rsa.load_pubPEM("pub.pem");
-    rsa.load_prvPEM("prv.pem", NULL);
-
+    try {
+        rsa.load_prvPEM("prv.pem", NULL);
+    } catch(std::exception& E){
+        std::cerr << "Error caught!\n";
+        std::cerr << E.what() << '\n';
+        return 1;
+    }
+    rsa.write_pubPEM("pub.pem");
+    rsa.write_prvPEM("prv.pem", p);
 
     const char* msg = "Halo halo halo kurna";
     if(argc < 2){
@@ -131,6 +141,7 @@ int test_rsa(int argc, char** argv){
 
 int test_sig(int argc, char** argv){
     RSA_keys rsa;
+    rsa.gen_key_pair(1024);
     rsa.load_pubPEM("pub.pem");
     rsa.load_prvPEM("prv.pem", NULL);
 

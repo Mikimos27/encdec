@@ -163,15 +163,21 @@ void RSA_keys::sign(const unsigned char* msg, int msgsize){
         }
         //Use RSS-PSS padding !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
-        if(!EVP_DigestSignInit(ctx, NULL, md, NULL, pkey)){//Change to _ex for Openssl 3.0
+        if(!EVP_DigestSignInit(ctx, NULL, md, NULL, this->prv)){//Change to _ex for Openssl 3.0
             std::cerr << "Sig init failed\n";
-            break
+            break;
         }
-        if(!EVP_DigestSignFinal(ctx, NULL, &out_size)){
+        if(!EVP_DigestSignFinal(ctx, NULL, &plen)){
             std::cerr << "Sig get size failed\n";
             break;
         }
-        out_buff = (unsigned char*)OPENSSL_malloc(out_size);
+        out_buff = (unsigned char*)OPENSSL_malloc(plen);
+        if(!EVP_DigestSignFinal(ctx, out_buff, &plen)){
+            std::cerr << "Sig gen failed\n";
+            break;
+        }
+
+        out_size = plen;
 
     }while(0);
 

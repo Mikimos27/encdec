@@ -47,12 +47,12 @@ void RSA_keys::write_pub_to(std::FILE* const fp){
 
 EVP_PKEY* RSA_keys::_extract_pub(EVP_PKEY* keypair){
     if (!keypair)
-        return NULL;
+        return nullptr;
 
-    OSSL_PARAM *params = NULL;
-    EVP_PKEY *pubkey = NULL;
-    EVP_PKEY_CTX *ctx_export = NULL;
-    EVP_PKEY_CTX *ctx_import = NULL;
+    OSSL_PARAM *params = nullptr;
+    EVP_PKEY *pubkey = nullptr;
+    EVP_PKEY_CTX *ctx_export = nullptr;
+    EVP_PKEY_CTX *ctx_import = nullptr;
 
     do{
         // Export the public components from the original key

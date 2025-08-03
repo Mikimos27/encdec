@@ -67,32 +67,33 @@ int test_aes(int argc, char** argv){
 
 
 int test_rsa(int argc, char** argv){
-    int keysize = 4096;
-    if(argc < 2){
-        std::cout << "No key size given\nUsing default: 4096\n";
-    }
-    else {
-        try{
-            keysize = std::stoi(argv[1]);
-        }catch(...){
-            std::cerr << "NAN given\n";
-            return 1;
-        }
-    }
     RSA_keys rsa;
-    if(rsa.gen_key_pair(keysize) < 0){
-        std::cerr << "Keys can't be generated\n";
-        return 1;
-    }
-    rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", NULL);
+//    int keysize = 4096;
+//    if(argc < 2){
+//        std::cout << "No key size given\nUsing default: 4096\n";
+//    }
+//    else {
+//        try{
+//            keysize = std::stoi(argv[1]);
+//        }catch(...){
+//            std::cerr << "NAN given\n";
+//            return 1;
+//        }
+//    }
+//    RSA_keys rsa;
+//    if(rsa.gen_key_pair(keysize) < 0){
+//        std::cerr << "Keys can't be generated\n";
+//        return 1;
+//    }
+    rsa.load_pubPEM("pub.pem");
+    rsa.load_prvPEM("prv.pem", NULL);
 
 
     const char* msg = "Halo halo halo kurna";
-    if(argc < 3){
+    if(argc < 2){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
-    else msg = argv[2];
+    else msg = argv[1];
     try{
         rsa.encrypt((const unsigned char*)msg, std::strlen(msg));
     }catch(const std::exception& E){
@@ -129,32 +130,16 @@ int test_rsa(int argc, char** argv){
 }
 
 int test_sig(int argc, char** argv){
-    int keysize = 4096;
-    if(argc < 2){
-        std::cout << "No key size given\nUsing default: 4096\n";
-    }
-    else {
-        try{
-            keysize = std::stoi(argv[1]);
-        }catch(...){
-            std::cerr << "NAN given\n";
-            return 1;
-        }
-    }
     RSA_keys rsa;
-    if(rsa.gen_key_pair(keysize) < 0){
-        std::cerr << "Keys can't be generated\n";
-        return 1;
-    }
-    rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", NULL);
+    rsa.load_pubPEM("pub.pem");
+    rsa.load_prvPEM("prv.pem", NULL);
 
 
     const char* msg = "Halo halo halo kurna";
-    if(argc < 3){
+    if(argc < 2){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
-    else msg = argv[2];
+    else msg = argv[1];
     try{
         rsa.sign((const unsigned char*)msg, std::strlen(msg));
     }catch(const std::exception& E){

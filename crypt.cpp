@@ -1,4 +1,4 @@
-#include "aes/aes_256_gcm.h"
+#include "aes/aes.h"
 #include "rsa/rsa.h"
 extern "C"{
 #include <openssl/pem.h>

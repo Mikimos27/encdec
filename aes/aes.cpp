@@ -10,7 +10,7 @@
 
 #include <string>
 #include <iostream>
-#include "aes_256_gcm.h"
+#include "aes.h"
 
 
 using uchar = unsigned char;
@@ -146,7 +146,7 @@ void AES_256_GCM_key::set_key(unsigned char (&arr)[KEYLEN]){
 }
 
 void AES_256_GCM_key::set_iv(unsigned char (&arr)[IVLEN]){
-    for(std::size_t i = 0; i < KEYLEN; i++){
+    for(std::size_t i = 0; i < IVLEN; i++){
         iv[i] = arr[i];
     }
 }

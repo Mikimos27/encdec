@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -Werror -O2 -lcrypto
+CXXFLAGS=-g -Wall -Werror -O2 -lcrypto
 
 all: crypto.elf 
 

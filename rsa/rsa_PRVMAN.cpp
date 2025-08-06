@@ -1,14 +1,13 @@
-void RSA_keys::load_prvPEM(const char* filepath, const char* passwd){
+void RSA_keys::load_prvPEM(const char* filepath, char* passwd){
 
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
     if(fp == NULL){
         throw std::invalid_argument("Can't open file");
     }
+    if(this->prv) _free_key(&this->prv);
 
     if(passwd){
-        EVP_PKEY_free(this->prv);
-        this->prv = EVP_PKEY_new();
         if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, (unsigned char*)passwd, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
         OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
     }
@@ -17,10 +16,11 @@ void RSA_keys::load_prvPEM(const char* filepath, const char* passwd){
 
 
     std::fclose(fp);
-    this->pub = _extract_pub(this->prv);
+    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    if(_extract_pub(this->prv, &this->pub)) std::cerr << "RSA_keys::load_prvPEM _extract_pub error\n";
 }
 
-void RSA_keys::write_prvPEM(const char* filepath, const char* passwd){
+void RSA_keys::write_prvPEM(const char* filepath, char* passwd){
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "w");
     if(fp == NULL){
@@ -38,7 +38,7 @@ void RSA_keys::write_prvPEM(const char* filepath, const char* passwd){
 
     std::fclose(fp);
 }
-void RSA_keys::load_prvDER(const char* filepath, const char* passwd){
+void RSA_keys::load_prvDER(const char* filepath, char* passwd){
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
     if(fp == NULL){
@@ -52,7 +52,7 @@ void RSA_keys::load_prvDER(const char* filepath, const char* passwd){
 
 }
 
-void RSA_keys::write_prvDER(const char* filepath, const char* passwd){
+void RSA_keys::write_prvDER(const char* filepath, char* passwd){
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "w");
     if(fp == NULL){
@@ -61,7 +61,7 @@ void RSA_keys::write_prvDER(const char* filepath, const char* passwd){
 
 }
 
-void RSA_keys::write_prv_to(std::FILE* const fp, const char* passwd){
+void RSA_keys::write_prv_to(std::FILE* const fp, char* passwd){
     EVP_CIPHER* cipher = nullptr;
     if(!fp){
         throw std::invalid_argument("Can't open NULL file");

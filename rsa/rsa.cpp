@@ -18,15 +18,15 @@ extern "C"{
 #include "rsa_crypto.cpp"
 
 RSA_keys::RSA_keys(){
-    prv = EVP_PKEY_new();
-    pub = EVP_PKEY_new();
+    this->prv = nullptr;
+    this->pub = nullptr;
     keysize = 0;
     out_buff = nullptr;
     out_size = 0;
 }
 RSA_keys::~RSA_keys(){
-    _free_key(&prv);
-    _free_key(&pub);
+    if(prv != nullptr) _free_key(&prv);
+    if(pub != nullptr) _free_key(&pub);
     keysize = 0;
     _clear_buff();
     ERR_print_errors_fp(stderr);
@@ -41,7 +41,7 @@ void RSA_keys::set_key_prv(EVP_PKEY** keys){
     keysize = EVP_PKEY_get_bits(prv);
 
     _clear_buff();
-    _extract_pub(prv);
+    if(_extract_pub(prv, &pub)) std::cerr << "RSA_keys::set_key_prv _extract_pub error\n";
 }
 const EVP_PKEY* const RSA_keys::get_key_prv(){
     return prv;
@@ -71,7 +71,10 @@ int RSA_keys::gen_key_pair(int keysize){
     EVP_PKEY* pkey = nullptr;
     unsigned int primes = 2;
 
+    //Problemvvvvv
     ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);//change to FIPS
+    //ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);//change to FIPS
+    //Problem^^^^^
     do{
 
         if(!ctx){
@@ -100,12 +103,13 @@ int RSA_keys::gen_key_pair(int keysize){
     EVP_PKEY_CTX_free(ctx);
 
 
-    _free_key(&this->prv);
-    _free_key(&this->pub);
+    if(this->prv) _free_key(&this->prv);
+    if(this->pub) _free_key(&this->pub);
     prv = pkey;
     pkey = nullptr;
 
-    pub = _extract_pub(prv);
+    if(_extract_pub(prv, &pub)) throw std::invalid_argument("Can't extract pub key\n");
+    if(!pub) throw std::invalid_argument("BAD in genkey\n");
     this->keysize = keysize;
 
     return 0;
@@ -132,8 +136,11 @@ void RSA_keys::_clear_buff(){
 }
 
 void RSA_keys::_free_key(EVP_PKEY** pkey){
-    if(pkey){
+    static int free_count = 0;
+    if(*pkey){
         EVP_PKEY_free(*pkey);
         *pkey = nullptr;
+        free_count++;
+        std::cout << free_count << '\n';
     }
 }

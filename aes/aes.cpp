@@ -46,6 +46,7 @@ AES_GCM::AES_GCM(AES_GCM&& other){
 AES_GCM::~AES_GCM(){
     OPENSSL_cleanse((void*)this->key, AES_GCM::KEYLEN);
     delete[] aad;
+    aad = nullptr;
 }
 
 void AES_GCM::genIV(){

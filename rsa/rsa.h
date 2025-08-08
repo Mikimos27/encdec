@@ -4,7 +4,6 @@
 #define RSA_H
 extern "C"{
 #include <openssl/evp.h>
-#include <openssl/rsa.h>
 }
 #include <string>
 #include <cstdio>

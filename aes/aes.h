@@ -12,7 +12,9 @@ public:
     static constexpr std::size_t IVLEN = 12;
 
 
+    AES_GCM();
 
+    AES_GCM(unsigned char* key, const char* aad);
     AES_GCM(const char* aad);
     AES_GCM(const AES_GCM& other);
     AES_GCM(AES_GCM&& other);
@@ -27,6 +29,8 @@ public:
     const unsigned char* get_key();
     const unsigned char* get_iv();
     const char* get_aad();
+
+    void set_aad();//!!!!!!!!!!!!!!!!
 
     void set_key(unsigned char (&arr)[KEYLEN]);
     void set_iv(unsigned char (&arr)[IVLEN]);

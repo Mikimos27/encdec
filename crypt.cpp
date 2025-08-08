@@ -132,7 +132,7 @@ int test_rsa(int argc, char** argv){
     rsa.decrypt(enc);
 
     unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
-    printf("outsize = %ld", rsa.get_out_size());
+    printf("outsize = %ld\n", rsa.get_out_size());
     std::memcpy(get, rsa.get_out_buff(), rsa.get_out_size());
     get[rsa.get_out_size()] = 0;
     
@@ -153,14 +153,6 @@ int test_rsa(int argc, char** argv){
 int test_sig(int argc, char** argv){
     RSA_keys rsa;
     rsa.gen_key_pair(1024);
-    rsa.load_pubPEM("pub.pem");
-    char p1[2] = "a";
-    try{
-        rsa.load_prvPEM("prv.pem", p1);
-    }catch(...){
-        std::cerr << "Can't open prv.pem\n";
-        return 1;
-    }
 
 
     const char* msg = "Halo halo halo kurna";
@@ -174,14 +166,25 @@ int test_sig(int argc, char** argv){
         std::cout << E.what() << '\n';
         return 1;
     }
+
+    unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
+    size_t size = rsa.get_out_size();
+    printf("outsize = %ld\n", rsa.get_out_size());
+    std::memcpy(get, rsa.get_out_buff(), size);
+    get[size] = 0;
+
     std::cout << "Msg: " << msg << '\n';
-    print_hex("Sig", rsa.get_out_buff(), rsa.get_out_size());
+    print_hex("Sig", get, size);
 
+    if(rsa.verify((const unsigned char*)msg, std::strlen(msg), get, size)){
+        std::cerr << "Bad signature\n";
+    }else std::cout << "Good signature :)\n";
 
-
+    delete[] get;
+    ERR_print_errors_fp(stderr);
     return 0;
 }
 
 int main(int argc, char** argv){
-    return test_aes(argc, argv);
+    return test_sig(argc, argv);
 }

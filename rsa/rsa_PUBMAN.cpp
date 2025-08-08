@@ -52,7 +52,6 @@ void RSA_keys::write_pub_to(std::FILE* const fp){
     PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
 }
 
-////////////////////Problem vvvvvvvvvvvvvv
 int RSA_keys::_extract_pub(EVP_PKEY* keypair, EVP_PKEY** pub){
     if (!keypair)
         return 1;
@@ -102,7 +101,6 @@ int RSA_keys::_extract_pub(EVP_PKEY* keypair, EVP_PKEY** pub){
     pubkey = nullptr;
     return 0;
 }
-////////////////////Problem ^^^^^^^^^^^^^^
 /*
 EVP_PKEY* RSA_keys::_extract_pub(EVP_PKEY* keypair){
     if (!keypair)

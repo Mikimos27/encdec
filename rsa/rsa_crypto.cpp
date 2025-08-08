@@ -1,4 +1,4 @@
-void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
+void RSA_keys::encrypt(const unsigned char* plaintext, int msglen){
     if(!this->pub)
         throw std::logic_error("There is no public key set");
     EVP_PKEY_CTX* ctx = nullptr;
@@ -47,12 +47,12 @@ void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
         }
 
 
-        if(!EVP_PKEY_encrypt(ctx, NULL, &clen, plaintext, msgsize)){
+        if(!EVP_PKEY_encrypt(ctx, NULL, &clen, plaintext, msglen)){
             std::cerr << "Encryption length check failed\n";
             break;
         }
         out_buff = (unsigned char*)OPENSSL_malloc(clen);
-        if(!EVP_PKEY_encrypt(ctx, out_buff, &clen, plaintext, msgsize)){
+        if(!EVP_PKEY_encrypt(ctx, out_buff, &clen, plaintext, msglen)){
             std::cerr << "Encrypt failed\n";
             break;
         }
@@ -140,10 +140,11 @@ void RSA_keys::decrypt(const unsigned char* ciphertext){
     EVP_MD_free(md);
 }
 
-void RSA_keys::sign(const unsigned char* msg, int msgsize){
+void RSA_keys::sign(const unsigned char* msg, int msglen){
     if(!this->prv)
         throw std::logic_error("There is no private key set");
     EVP_MD_CTX* ctx = nullptr;
+    EVP_PKEY_CTX* pctx = nullptr;
     std::size_t plen = 0;
 
     _clear_buff();
@@ -161,13 +162,23 @@ void RSA_keys::sign(const unsigned char* msg, int msgsize){
             std::cerr << "Can't fetch sha256 for signature\n";
             break;
         }
-        //Use RSS-PSS padding !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        
-        if(!EVP_DigestSignInit(ctx, NULL, md, NULL, this->prv)){//Change to _ex for Openssl 3.0
+        if(!EVP_DigestSignInit(ctx, &pctx, md, NULL, this->prv)){//Change to _ex for Openssl 3.0
             std::cerr << "Sig init failed\n";
             break;
         }
-        if(!EVP_DigestSignUpdate(ctx, (void*)msg, msgsize)){
+        if(!EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING)){
+            std::cerr << "Sig set padding failed\n";
+            break;
+        }
+        if(!EVP_PKEY_CTX_set_rsa_mgf1_md(pctx, md)){
+            std::cerr << "Sig mgf1 failed\n";
+            break;
+        }
+        if(!EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, RSA_PSS_SALTLEN_DIGEST)){ //RSA_PSS_SALTLEN_DIGEST = -1
+            std::cerr << "Sig pss saltlen length failed\n";
+            break;
+        }
+        if(!EVP_DigestSignUpdate(ctx, (void*)msg, msglen)){
             std::cerr << "Sig msg update failed\n";
             break;
         }
@@ -189,8 +200,54 @@ void RSA_keys::sign(const unsigned char* msg, int msgsize){
     EVP_MD_CTX_free(ctx);
 }
 
-int RSA_keys::verify(const unsigned char* msg, int msgsize, const unsigned char* signature){
-    return 0;
+int RSA_keys::verify(const unsigned char* msg, int msglen, const unsigned char* signature, int siglen){
+    EVP_PKEY_CTX* pctx = nullptr;
+    EVP_MD_CTX* mctx = nullptr;
+    EVP_MD* md = nullptr;
+    int failed = 1;
+    do{
+        mctx = EVP_MD_CTX_new();
+        if(!mctx){
+            std::cerr << "Verify EVP_MD_CTX_new() failed\n";
+            break;
+        }
+        md = EVP_MD_fetch(NULL, "SHA256", NULL);
+        if(!md){
+            std::cerr << "Verify md fetch failed\n";
+            break;
+        }
+        if(!EVP_DigestVerifyInit(mctx, &pctx, md, NULL, this->pub)){
+            std::cerr << "Verify init failed\n";
+            break;
+        }
+
+        if(!EVP_PKEY_CTX_set_rsa_padding(pctx, RSA_PKCS1_PSS_PADDING)){
+            std::cerr << "Verify set padding failed\n";
+            break;
+        }
+        if(!EVP_PKEY_CTX_set_signature_md(pctx, md)){
+            std::cerr << "Verify set md failed\n";
+            break;
+        }
+        if(!EVP_PKEY_CTX_set_rsa_pss_saltlen(pctx, RSA_PSS_SALTLEN_DIGEST)){
+            std::cerr << "Verify set saltlen failed\n";
+            break;
+        }
+
+        if(!EVP_DigestVerifyUpdate(mctx, msg, msglen)){
+            std::cerr << "Verify update failed\n";
+            break;
+        }
+        if(EVP_DigestVerifyFinal(mctx, signature, siglen) != 1){
+            std::cerr << "Verification failed\n";
+            break;
+        }
+        failed = 0;
+    }while(0);
+
+    EVP_MD_free(md);
+    EVP_MD_CTX_free(mctx);
+    return failed;
 }
 
 

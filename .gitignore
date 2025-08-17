@@ -1,4 +1,5 @@
-*.elf
+mem
+crypto
 *.pem
 *.der
 *.gch

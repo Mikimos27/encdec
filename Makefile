@@ -1,7 +1,7 @@
 CXX=g++
-CXXFLAGS=-g -Wall -Werror -O2 -lcrypto
+CXXFLAGS=-g -Wall -Werror -O2 -lcrypto -std=c++23
 
-all: crypto.elf 
+all: crypto
 
 #rsa.o: rsa/rsa.h rsa/rsa.cpp rsa/rsa_PRVMAN.cpp rsa/rsa_PUBMAN.cpp rsa/rsa_crypto.cpp
 #	$(CXX) $(CXXFLAGS) -c rsa/rsa.cpp
@@ -9,20 +9,23 @@ all: crypto.elf
 rsa.o: rsa/*
 	$(CXX) $(CXXFLAGS) -c rsa/rsa.cpp
 
+ed25519.o: ed25519/*
+	$(CXX) $(CXXFLAGS) -c ed25519/ed25519.cpp
+
 aes.o: aes/aes.h aes/aes.cpp
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CXX) $(CXXFLAGS) -c aes/aes.cpp
 
 dh.o: dh/dh.h dh/dh.cpp
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CXX) $(CXXFLAGS) -c dh/dh.cpp
 
 crypt.o: crypt.cpp
 	$(CXX) $(CXXFLAGS) -c $^
 
-crypto.elf: rsa.o aes.o dh.o crypt.o
+crypto: rsa.o aes.o dh.o ed25519.o crypt.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 
-mem.elf: rsa.o aes.o dh.o crypt.o
+mem: rsa.o aes.o dh.o ed25519.o crypt.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ -fsanitize=address -fsanitize=bounds
 
 

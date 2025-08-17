@@ -238,7 +238,7 @@ int RSA_keys::verify(const unsigned char* msg, int msglen, const unsigned char* 
             std::cerr << "Verify update failed\n";
             break;
         }
-        if(EVP_DigestVerifyFinal(mctx, signature, siglen) != 1){
+        if(!EVP_DigestVerifyFinal(mctx, signature, siglen)){
             std::cerr << "Verification failed\n";
             break;
         }

@@ -193,7 +193,7 @@ ErrorType AES_GCM::set_key(const unsigned char (&arr)[KEYLEN]){
         if(bad && arr[i] != 0) bad = false;
         key[i] = arr[i];
     }
-    return bad ? None : BadInput;
+    return bad ? BadInput : None;
 }
 
 ErrorType AES_GCM::set_iv(const unsigned char (&arr)[IVLEN]){
@@ -202,7 +202,7 @@ ErrorType AES_GCM::set_iv(const unsigned char (&arr)[IVLEN]){
         if(bad && arr[i] != 0) bad = false;
         iv[i] = arr[i];
     }
-    return bad ? None : BadInput;
+    return bad ? BadInput : None;
 }
 
 ErrorType AES_GCM::set_aad(const char* arr){

@@ -75,18 +75,18 @@ int test_sig(int argc, char** argv){
     Ed25519 edcs;
     edcs.gen_key_pair(256);
 
-    if(edcs.write_pubPEM("pub.pem")) std::cerr << "Template\n";
-    if(edcs.write_prvPEM("prv.pem", NULL)) std::cerr << "Template\n";
-    if(edcs.load_pubPEM("pub.pem")) std::cerr << "Template\n";
-    if(edcs.load_prvPEM("prv.pem", NULL)) std::cerr << "Template\n";
+    if(edcs.write_pubPEM("pub.pem")) std::cerr << "write to pub.pem F\n";
+    if(edcs.write_prvPEM("prv.pem", NULL)) std::cerr << "write to prv.pem F\n";
+    if(edcs.load_pubPEM("pub.pem")) std::cerr << "load from pub.pem F\n";
+    if(edcs.load_prvPEM("prv.pem", NULL)) std::cerr << "load from prv.pem F\n";
 
     char p1[2] = "a";
     char p2[2] = "a";
 
-    if(edcs.write_pubPEM("pub.pem")) std::cerr << "Template\n";
-    if(edcs.write_prvPEM("prv.pem", p1)) std::cerr << "Template\n";
-    if(edcs.load_pubPEM("pub.pem")) std::cerr << "Template\n";
-    if(edcs.load_prvPEM("prv.pem", p2)) std::cerr << "Template\n";
+    if(edcs.write_pubPEM("pub.pem")) std::cerr << "write to pub.pem F\n";
+    if(edcs.write_prvPEM("prv.pem", p1)) std::cerr << "write to prv.pem F\n";
+    if(edcs.load_pubPEM("pub.pem")) std::cerr << "load from pub.pem F\n";
+    if(edcs.load_prvPEM("prv.pem", p2)) std::cerr << "load from prv.pem F\n";
 
 
     const char* msg = "Halo halo halo kurna";
@@ -117,12 +117,13 @@ int test_sig(int argc, char** argv){
 int test_dh(int argc, char** argv){
     DH_protocol dh1, dh2;
 
-    if(dh1.gen_key()) std::cerr << "Template\n";
-    if(dh2.gen_key()) std::cerr << "Template\n";
+    std::cout << "\n\n";
+    if(dh1.gen_key()) std::cerr << "DH genkey F\n";
+    if(dh2.gen_key()) std::cerr << "DH genkey F\n";
     EVP_PKEY* pub1 = nullptr, *pub2 = nullptr;
     
-    if(dh1.extract_pub(&pub1)) std::cerr << "Template\n";
-    if(dh2.extract_pub(&pub2)) std::cerr << "Template\n";
+    if(dh1.extract_pub(&pub1)) std::cerr << "DH extract F\n";
+    if(dh2.extract_pub(&pub2)) std::cerr << "DH extract F\n";
 
     constexpr size_t saltlen = AES_GCM::KEYLEN;
     unsigned char salt[saltlen] = {0};
@@ -130,17 +131,18 @@ int test_dh(int argc, char** argv){
 
     unsigned char iv[AES_GCM::IVLEN] = {0};
     RAND_bytes(iv, AES_GCM::IVLEN);
+    print_hex("IV", iv, AES_GCM::IVLEN);
 
-    if(dh1.gen_secret(pub2)) std::cerr << "Template\n";
-    if(dh2.gen_secret(pub1)) std::cerr << "Template\n";
+    if(dh1.gen_secret(pub2)) std::cerr << "DH secret F\n";
+    if(dh2.gen_secret(pub1)) std::cerr << "DH secret F\n";
 
     char aad[] = "additional auth data";
 
     auto k1 = *dh1.gen_aes(salt, saltlen, aad);
     auto k2 = *dh2.gen_aes(salt, saltlen, aad);
 
-    if(k1.set_iv(iv)) std::cerr << "Template\n";
-    if(k2.set_iv(iv)) std::cerr << "Template\n";
+    if(k1.set_iv(iv)) std::cerr << "DH set iv F\n";
+    if(k2.set_iv(iv)) std::cerr << "DH set iv F\n";
 
     //share aad
 
@@ -155,5 +157,7 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_sig(argc, argv);
+    test_aes(argc, argv);
+    test_sig(argc, argv);
+    return test_dh(argc, argv);
 }

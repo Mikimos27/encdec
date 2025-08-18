@@ -7,15 +7,13 @@ BIN = crypto
 
 all: $(BIN)
 
+
 #rsa.o: rsa/rsa.h rsa/rsa.cpp rsa/rsa_PRVMAN.cpp rsa/rsa_PUBMAN.cpp rsa/rsa_crypto.cpp
 #	$(CXX) $(CXXFLAGS) -c rsa/rsa.cpp
 
 
-%.o: src/%.cpp hdr/%.h
-	$(CXX) $(CXXFLAGS) -c $@ $<
-
-crypt.o: crypt.cpp
-	$(CXX) $(CXXFLAGS) -c $^
+%.o: %.cpp ../hdr/%.h
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 
 $(BIN): $(OBJ)

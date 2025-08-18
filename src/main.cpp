@@ -1,6 +1,6 @@
-#include "hdr/aes.h"
-#include "hdr/dh.h"
-#include "hdr/ed25519.h"
+#include "../hdr/aes.h"
+#include "../hdr/dh.h"
+#include "../hdr/ed25519.h"
 extern "C"{
 #include <openssl/err.h>
 #include <openssl/rand.h>

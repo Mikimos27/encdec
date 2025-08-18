@@ -1,4 +1,4 @@
-#include "dh.h"
+#include "../hdr/dh.h"
 extern "C"{
 #include <openssl/evp.h>
 #include <openssl/crypto.h>

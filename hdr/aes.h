@@ -4,6 +4,7 @@
 #define AES_256_GCM_H
 
 #include <cstddef>
+#include "error.h"
 
 class AES_GCM{
 public:
@@ -12,27 +13,27 @@ public:
     static constexpr std::size_t IVLEN = 12;
 
 
-    AES_GCM(unsigned char* key, const char* aad);
+    AES_GCM(const unsigned char* key, const char* aad);
     AES_GCM(const char* aad);
     AES_GCM(const AES_GCM& other);
     AES_GCM(AES_GCM&& other);
     ~AES_GCM();
 
-    void gen_key();
-    void genIV();
+    ErrorType gen_key();
+    ErrorType genIV();
 
-    void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
-    void decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int length);
+    ErrorType encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
+    ErrorType decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int length);
    
     const unsigned char* get_tag();
     const unsigned char* get_key();
     const unsigned char* get_iv();
     const char* get_aad();
 
-    void set_aad();//!!!!!!!!!!!!!!!!
+    ErrorType set_aad(const char* arr);
 
-    void set_key(unsigned char (&arr)[KEYLEN]);
-    void set_iv(unsigned char (&arr)[IVLEN]);
+    ErrorType set_key(const unsigned char (&arr)[KEYLEN]);
+    ErrorType set_iv(const unsigned char (&arr)[IVLEN]);
 
 private:
     unsigned char key[KEYLEN];

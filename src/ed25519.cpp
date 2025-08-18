@@ -29,57 +29,64 @@ Ed25519::~Ed25519(){
 }
 
 
-void Ed25519::set_key_prv(EVP_PKEY** keys){
+ErrorType Ed25519::set_key_prv(EVP_PKEY* keys){
+    auto newkey = EVP_PKEY_dup(keys);
+    if(!newkey) return KeygenError;
     _free_key(&prv);
-    prv = *keys;
-    *keys = nullptr;
+    prv = newkey;
+    newkey = nullptr;
 
     keysize = EVP_PKEY_get_bits(prv);
 
     _clear_buff();
-    if(_extract_pub(prv, &pub)) std::cerr << "Ed25519::set_key_prv _extract_pub error\n";
+    if(_extract_pub(prv, &pub)) {
+        std::cerr << "Ed25519::set_key_prv _extract_pub error\n";
+        return NoPrivate;
+    }
+    return None;
 }
 const EVP_PKEY* const Ed25519::get_key_prv(){
     return prv;
 }
 
-void Ed25519::set_key_pub(EVP_PKEY** keys){
+ErrorType Ed25519::set_key_pub(EVP_PKEY* keys){
+    auto newkey = EVP_PKEY_dup(keys);
+    if(!newkey) return KeygenError;
     _free_key(&pub);
     _free_key(&prv);
     prv = nullptr;
-    pub = *keys;
-    *keys = nullptr;
+    pub = newkey;
+    newkey = nullptr;
 
     _clear_buff();
+
+    return None;
 }
 const EVP_PKEY* const Ed25519::get_key_pub(){
     return pub;
 }
 
-int Ed25519::gen_key_pair(int keysize){
+ErrorType Ed25519::gen_key_pair(int keysize){
     //if(keysize < 1024) throw std::logic_error("Key must be at least 1024 bits long, ideally equal or larger than 2048 bits");
     if(keysize % 8){
         std::cerr << "Key size not divisible by 8\n";
-        return -1;
+        return BadInput;
     }
     _clear_buff();
     EVP_PKEY_CTX* ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
     //unsigned int primes = 2;
 
-    //Problemvvvvv
     ctx = EVP_PKEY_CTX_new_from_name(NULL, "Ed25519", NULL);//change to FIPS
     //ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);//change to FIPS
-    //Problem^^^^^
-    do{
-
+    auto err = [&]() -> ErrorType {
         if(!ctx){
             std::cerr << "EVP_PKEY_CTX_new_from_name() failed\n";
-            break;
+            return OSSLError;
         }
         if(EVP_PKEY_keygen_init(ctx) <= 0){
             std::cerr << "EVP_PKEY_keygen_init() failed\n";
-            break;
+            return KeygenError;
         }
         /*
         if(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, keysize) <= 0){
@@ -93,12 +100,13 @@ int Ed25519::gen_key_pair(int keysize){
         */
         if(EVP_PKEY_generate(ctx, &pkey) <= 0){
             std::cerr << "EVP_PKEY_generate() failed\n";
-            break;
+            return KeygenError;
         }
-
-    }while(0);
+        return None;
+    }();
 
     EVP_PKEY_CTX_free(ctx);
+    if(err) return err;
 
 
     if(this->prv) _free_key(&this->prv);
@@ -106,62 +114,69 @@ int Ed25519::gen_key_pair(int keysize){
     prv = pkey;
     pkey = nullptr;
 
+
     if(_extract_pub(prv, &pub)) throw std::invalid_argument("Can't extract pub key\n");
     if(!pub) throw std::invalid_argument("BAD in genkey\n");
     this->keysize = keysize;
 
-    return 0;
+    return err;
 }
 
 
-int Ed25519::_extract_pub(EVP_PKEY* keypair, EVP_PKEY** pub){
+ErrorType Ed25519::_extract_pub(EVP_PKEY* keypair, EVP_PKEY** pub){
     if (!keypair)
-        return 1;
+        return ExtractionError;
 
     EVP_PKEY *pubkey = nullptr;
     OSSL_PARAM *params = nullptr;
     EVP_PKEY_CTX *ctx_export = nullptr;
     EVP_PKEY_CTX *ctx_import = nullptr;
 
-    do{
+    auto err = [&]() -> ErrorType {
         // Export the public components from the original key
         ctx_export = EVP_PKEY_CTX_new_from_pkey(NULL, keypair, NULL);
         if (!ctx_export){
             std::cerr << "Ctx export failed\n";
-            break;
+            return OSSLError;
         }
 
         if (EVP_PKEY_todata(keypair, EVP_PKEY_PUBLIC_KEY, &params) <= 0){
             std::cerr << "Todata failed\n";
-            break;
+            return ExtractionError;
         }
 
         // Import only the public components into a new EVP_PKEY
         ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "Ed25519", NULL);  // or EC, etc.
         if (!ctx_import){
             std::cerr << "Ctx failed\n";
-            break;
+            return OSSLError;
         }
 
         if (EVP_PKEY_fromdata_init(ctx_import) <= 0){
             std::cerr << "Fromdata failed\n";
-            break;
+            return ExtractionError;
         }
 
         if (EVP_PKEY_fromdata(ctx_import, &pubkey, EVP_PKEY_PUBLIC_KEY, params) <= 0){
-            pubkey = NULL;  // failed
             std::cerr << "Extraction failed\n";
-            break;
+            return ExtractionError;
         }
-    }while(0);
+        return None;
+    }();
 
     EVP_PKEY_CTX_free(ctx_export);
     EVP_PKEY_CTX_free(ctx_import);
     OSSL_PARAM_free(params);  // always free exported parameters
+
+    if(err) {
+        pubkey = nullptr;
+        return err;
+    }
+
     if(*pub) _free_key(pub);
     *pub = pubkey;
     pubkey = nullptr;
-    return 0;
+    return err;
 }
 /*
 EVP_PKEY* Ed25519::_extract_pub(EVP_PKEY* keypair){
@@ -212,47 +227,68 @@ void Ed25519::_free_key(EVP_PKEY** pkey){
 
 //PRV methods
 
-void Ed25519::load_prvPEM(const char* filepath, char* passwd){
+ErrorType Ed25519::load_prvPEM(const char* filepath, char* passwd){
 
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
-    if(fp == NULL){
-        throw std::invalid_argument("Can't open file");
+    if(!fp){
+        return FileError;
     }
+    EVP_PKEY* newkey = nullptr;
+
+    if(!PEM_read_PrivateKey_ex(fp, &newkey, NULL, (unsigned char*)passwd, NULL, NULL)){
+        std::fclose(fp);
+        return PemError;
+    }
+    if(passwd) OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
+
+
     if(this->prv) _free_key(&this->prv);
-
-    if(passwd){
-        if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, (unsigned char*)passwd, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
-        OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
-    }
-    else if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, NULL, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
-
+    this->prv = newkey;
 
 
     std::fclose(fp);
     //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-    if(_extract_pub(this->prv, &this->pub)) std::cerr << "Ed25519::load_prvPEM _extract_pub error\n";
+    if(_extract_pub(this->prv, &this->pub)) {
+        std::cerr << "Ed25519::load_prvPEM _extract_pub error\n";
+        return ExtractionError;
+    }
+
+    return None;
 }
 
-void Ed25519::write_prvPEM(const char* filepath, char* passwd){
+ErrorType Ed25519::write_prvPEM(const char* filepath, char* passwd){
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "w");
-    if(fp == NULL){
-        throw std::invalid_argument("Can't open file");
+    if(!fp){
+        return FileError;
     }
     EVP_CIPHER* cipher = nullptr;
     if(passwd){
         cipher = EVP_CIPHER_fetch(NULL, "AES-256-CBC", NULL);
-        PEM_write_PrivateKey_ex(fp, this->prv, cipher, (unsigned char*)passwd, std::strlen(passwd), NULL, NULL, NULL, NULL);
+        if(!cipher) {
+            std::fclose(fp);
+            return OSSLError;
+        }
+        if(!PEM_write_PrivateKey_ex(fp, this->prv, cipher, (unsigned char*)passwd, std::strlen(passwd), NULL, NULL, NULL, NULL)) {
+            EVP_CIPHER_free(cipher);
+            std::fclose(fp);
+            return PemError;
+        }
         OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
         EVP_CIPHER_free(cipher);
     }
-    else PEM_write_PrivateKey_ex(fp, this->prv, NULL, NULL, 0, NULL, NULL, NULL, NULL);
+    else if(!PEM_write_PrivateKey_ex(fp, this->prv, NULL, NULL, 0, NULL, NULL, NULL, NULL)) {
+        std::fclose(fp);
+        return PemError;
+    }
 
 
     std::fclose(fp);
+    return None;
 }
-void Ed25519::load_prvDER(const char* filepath, char* passwd){
+ErrorType Ed25519::load_prvDER(const char* filepath, char* passwd){
+    return FileError;
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
     if(fp == NULL){
@@ -266,150 +302,165 @@ void Ed25519::load_prvDER(const char* filepath, char* passwd){
 
 }
 
-void Ed25519::write_prvDER(const char* filepath, char* passwd){
+ErrorType Ed25519::write_prvDER(const char* filepath, char* passwd){
+    return FileError;
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "w");
-    if(fp == NULL){
+    if(!fp){
         throw std::invalid_argument("Bad filepath");
     }
 
 }
 
-void Ed25519::write_prv_to(std::FILE* const fp, char* passwd){
+ErrorType Ed25519::write_prv_to(std::FILE* const fp, char* passwd){
     EVP_CIPHER* cipher = nullptr;
     if(!fp){
-        throw std::invalid_argument("Can't open NULL file");
+        return FileError;
     }
     if(passwd){
         cipher = EVP_CIPHER_fetch(NULL, "AES-256-CBC", NULL);
-        PEM_write_PrivateKey_ex(fp, this->prv, cipher, (unsigned char*)passwd, std::strlen(passwd), NULL, NULL, NULL, NULL);
+        if(!cipher) {
+            EVP_CIPHER_free(cipher);
+            return OSSLError;
+        }
+        if(!PEM_write_PrivateKey_ex(fp, this->prv, cipher, (unsigned char*)passwd, std::strlen(passwd), NULL, NULL, NULL, NULL)) {
+            EVP_CIPHER_free(cipher);
+            return PemError;
+        }
         OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
         EVP_CIPHER_free(cipher);
     }
-    else PEM_write_PrivateKey_ex(fp, this->prv, NULL, NULL, 0, NULL, NULL, NULL, NULL);
+    else if(!PEM_write_PrivateKey_ex(fp, this->prv, NULL, NULL, 0, NULL, NULL, NULL, NULL)) return PemError;
+    return None;
 }
 
 //PUB methods
 
-void Ed25519::load_pubPEM(const char* filepath){
+ErrorType Ed25519::load_pubPEM(const char* filepath){
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
     if(this->pub) _free_key(&this->pub);
-    if(fp == NULL){
-        throw std::invalid_argument("Can't open file");
-    }
+    if(!fp) return FileError;
     if(!PEM_read_PUBKEY_ex(fp, &this->pub, NULL, NULL, NULL, NULL)){
-        throw std::invalid_argument("Can't read pub from PEM\n");
+        std::fclose(fp);
+        return PemError;
     }
     std::fclose(fp);
+    return None;
 }
 
-void Ed25519::write_pubPEM(const char* filepath){
+ErrorType Ed25519::write_pubPEM(const char* filepath){
     std::FILE* fp = std::fopen(filepath, "w");
 
-    if(!fp) std::invalid_argument("Bad filepath");
-
+    if(!fp) return FileError;
     if(!PEM_write_PUBKEY(fp, this->pub)){
-        throw std::invalid_argument("Can't write pub to PEM\n");
+        std::fclose(fp);
+        return PemError;
     }
 
     std::fclose(fp);
+    return None;
 }
 
-void Ed25519::load_pubDER(const char* filepath){
+ErrorType Ed25519::load_pubDER(const char* filepath){
+    return FileError;
+
+
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
     if(fp == NULL){
         throw std::invalid_argument("Can't open file");
     }
 
-
 }
 
 
-void Ed25519::write_pubDER(const char* filepath){
+ErrorType Ed25519::write_pubDER(const char* filepath){
+    return FileError;
+
+
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "w");
     if(fp == NULL){
         throw std::invalid_argument("Bad filepath");
     }
 
-
 }
 
-void Ed25519::write_pub_to(std::FILE* const fp){
-    if(fp == NULL){
-        throw std::invalid_argument("Can't open file");
-    }
+ErrorType Ed25519::write_pub_to(std::FILE* const fp){
+    if(!fp) return FileError;
+    
 
-    PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
+    if(!PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL)) return PemError;
+    return None;
 }
 
 
 
 //Cryptography
 
-void Ed25519::sign(const unsigned char* msg, int msglen){
+ErrorType Ed25519::sign(const unsigned char* msg, int msglen){
     if(!this->prv)
-        throw std::logic_error("There is no private key set");
+        return NoPrivate;
     EVP_MD_CTX* ctx = nullptr;
     std::size_t plen = 0;
 
     _clear_buff();
 
 
-    do{
+    auto err = [&]() -> ErrorType{
         ctx = EVP_MD_CTX_new();
         if(!ctx){
             std::cerr << "Can't generate ctx for signature\n";
-            break;
+            return OSSLError;
         }
 
         if(!EVP_DigestSignInit(ctx, NULL, NULL, NULL, this->prv)){//Change to _ex for Openssl 3.0
             std::cerr << "Sig init failed\n";
-            break;
+            return SiggenError;
         }
-        std::cout << "Msg: " << msg << "\nMsglen = " << msglen << '\n';
         if(!EVP_DigestSign(ctx, NULL, &plen, msg, msglen)){
             std::cerr << "Sig get size failed\n";
-            break;
+            return SiggenError;
         }
         out_buff = (unsigned char*)OPENSSL_malloc(plen);
+        if(!out_buff) return OSSLError;
         if(!EVP_DigestSign(ctx, out_buff, &plen, msg, msglen)){
             std::cerr << "Sig gen failed\n";
-            break;
+            return SiggenError;
         }
 
         out_size = plen;
-
-    }while(0);
+        return None;
+    }();
 
     EVP_MD_CTX_free(ctx);
+    return err;
 }
 
-int Ed25519::verify(const unsigned char* msg, int msglen, const unsigned char* signature, int siglen){
+ErrorType Ed25519::verify(const unsigned char* msg, int msglen, const unsigned char* signature, int siglen){
+    if(!this->pub) return NoPublic;
     EVP_MD_CTX* ctx = nullptr;
-    int failed = 1;
-    do{
+    auto err = [&]() -> ErrorType{
         ctx = EVP_MD_CTX_new();
         if(!ctx){
             std::cerr << "Can't generate ctx for sig ver\n";
-            break;
+            return OSSLError;
         }
         if(!EVP_DigestVerifyInit(ctx, NULL, NULL, NULL, this->pub)){
             std::cerr << "Verify init failed\n";
-            break;
+            return OSSLError;
         }
 
         if(!EVP_DigestVerify(ctx, signature, siglen, msg, msglen)){
             std::cerr << "Verification failed\n";
-            break;
+            return BadSig;
         }
-        failed = 0;
-    }while(0);
+        return None;
+    }();
 
     EVP_MD_CTX_free(ctx);
-    return failed;
+    return err;
 }
 
 

@@ -46,7 +46,7 @@ int test_aes(int argc, char** argv){
 
 
     aes.genIV();
-    aes.encrypt(in, cipher, len);
+    if(aes.encrypt(in, cipher, len)) std::cerr << "Enc failed\n";
 
     print_hex("ciphertext", cipher, len);
     print_hex("tag", aes.get_tag(), AES_GCM::TAGLEN);
@@ -54,7 +54,7 @@ int test_aes(int argc, char** argv){
     print_hex("key", aes.get_key(), AES_GCM::KEYLEN);
 
 
-    aes.decrypt(cipher, out, len);
+    if(aes.decrypt(cipher, out, len)) std::cerr << "Dec failed\n";
     
     std::cout << "Decrypted: ";
     for(int i = 0; i < len; i++){
@@ -72,8 +72,21 @@ int test_aes(int argc, char** argv){
 
 
 int test_sig(int argc, char** argv){
-    Ed25519 rsa;
-    rsa.gen_key_pair(256);
+    Ed25519 edcs;
+    edcs.gen_key_pair(256);
+
+    if(edcs.write_pubPEM("pub.pem")) std::cerr << "Template\n";
+    if(edcs.write_prvPEM("prv.pem", NULL)) std::cerr << "Template\n";
+    if(edcs.load_pubPEM("pub.pem")) std::cerr << "Template\n";
+    if(edcs.load_prvPEM("prv.pem", NULL)) std::cerr << "Template\n";
+
+    char p1[2] = "a";
+    char p2[2] = "a";
+
+    if(edcs.write_pubPEM("pub.pem")) std::cerr << "Template\n";
+    if(edcs.write_prvPEM("prv.pem", p1)) std::cerr << "Template\n";
+    if(edcs.load_pubPEM("pub.pem")) std::cerr << "Template\n";
+    if(edcs.load_prvPEM("prv.pem", p2)) std::cerr << "Template\n";
 
 
     const char* msg = "Halo halo halo kurna";
@@ -81,23 +94,18 @@ int test_sig(int argc, char** argv){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
     else msg = argv[1];
-    try{
-        rsa.sign((const unsigned char*)msg, std::strlen(msg));
-    }catch(const std::exception& E){
-        std::cout << E.what() << '\n';
-        return 1;
-    }
+    if(edcs.sign((const unsigned char*)msg, std::strlen(msg))) std::cerr << "Sig failed\n";
 
-    unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
-    size_t size = rsa.get_out_size();
-    printf("outsize = %ld\n", rsa.get_out_size());
-    std::memcpy(get, rsa.get_out_buff(), size);
+    unsigned char* get = new unsigned char[edcs.get_out_size() + 1];
+    size_t size = edcs.get_out_size();
+    printf("outsize = %ld\n", edcs.get_out_size());
+    std::memcpy(get, edcs.get_out_buff(), size);
     get[size] = 0;
 
     std::cout << "Msg: " << msg << '\n';
     print_hex("Sig", get, size);
 
-    if(rsa.verify((const unsigned char*)msg, std::strlen(msg), get, size)){
+    if(edcs.verify((const unsigned char*)msg, std::strlen(msg), get, size)){
         std::cerr << "Bad signature\n";
     }else std::cout << "Good signature :)\n";
 
@@ -109,12 +117,12 @@ int test_sig(int argc, char** argv){
 int test_dh(int argc, char** argv){
     DH_protocol dh1, dh2;
 
-    dh1.gen_key();
-    dh2.gen_key();
+    if(dh1.gen_key()) std::cerr << "Template\n";
+    if(dh2.gen_key()) std::cerr << "Template\n";
     EVP_PKEY* pub1 = nullptr, *pub2 = nullptr;
     
-    dh1.extract_pub(&pub1);
-    dh2.extract_pub(&pub2);
+    if(dh1.extract_pub(&pub1)) std::cerr << "Template\n";
+    if(dh2.extract_pub(&pub2)) std::cerr << "Template\n";
 
     constexpr size_t saltlen = AES_GCM::KEYLEN;
     unsigned char salt[saltlen] = {0};
@@ -123,16 +131,16 @@ int test_dh(int argc, char** argv){
     unsigned char iv[AES_GCM::IVLEN] = {0};
     RAND_bytes(iv, AES_GCM::IVLEN);
 
-    dh1.gen_secret(pub2);
-    dh2.gen_secret(pub1);
+    if(dh1.gen_secret(pub2)) std::cerr << "Template\n";
+    if(dh2.gen_secret(pub1)) std::cerr << "Template\n";
 
     char aad[] = "additional auth data";
 
     auto k1 = *dh1.gen_aes(salt, saltlen, aad);
     auto k2 = *dh2.gen_aes(salt, saltlen, aad);
 
-    k1.set_iv(iv);
-    k2.set_iv(iv);
+    if(k1.set_iv(iv)) std::cerr << "Template\n";
+    if(k2.set_iv(iv)) std::cerr << "Template\n";
 
     //share aad
 
@@ -147,5 +155,5 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_dh(argc, argv);
+    return test_sig(argc, argv);
 }

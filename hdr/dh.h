@@ -5,7 +5,8 @@
 
 #include <openssl/evp.h>
 #include <cstddef>
-#include "../hdr/aes.h"
+#include "aes.h"
+#include "error.h"
 
 #include <expected>
 
@@ -15,10 +16,10 @@ public:
     DH_protocol();
     ~DH_protocol();
 
-    void gen_key();
-    int gen_secret(EVP_PKEY* peer);
-    std::expected<AES_GCM, const char*> gen_aes(const unsigned char* salt, size_t saltlen, char* aad);
-    int extract_pub(EVP_PKEY** pub);
+    ErrorType gen_key();
+    ErrorType gen_secret(EVP_PKEY* peer);
+    std::expected<AES_GCM, ErrorType> gen_aes(const unsigned char* salt, size_t saltlen, char* aad);
+    ErrorType extract_pub(EVP_PKEY** pub);
 
 private:
 

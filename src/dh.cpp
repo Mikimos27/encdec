@@ -25,12 +25,12 @@ DH_protocol::~DH_protocol(){
 }
 
 
-void DH_protocol::gen_key(){
+ErrorType DH_protocol::gen_key(){
     EVP_PKEY_CTX* pctx = nullptr, *kctx = nullptr; 
     EVP_PKEY* params = nullptr;
     EVP_PKEY_free(keypair);
     keypair = nullptr;
-    do{
+    auto err = [&]() -> ErrorType{
         kctx = EVP_PKEY_CTX_new_from_name(NULL, "X25519", NULL);
         /*
         if(!pctx || !EVP_PKEY_paramgen_init(pctx)){
@@ -53,74 +53,85 @@ void DH_protocol::gen_key(){
 
         kctx = EVP_PKEY_CTX_new(params, NULL);
         */
-        if(!kctx || !EVP_PKEY_keygen_init(kctx)){
+        if(!kctx){
+            std::cerr << "DH context failed\n";
+            return OSSLError;
+        }
+        if(!EVP_PKEY_keygen_init(kctx)){
             std::cerr << "DH can't init keygen\n";
-            break;
+            return KeygenError;
         }
         if(!EVP_PKEY_keygen(kctx, &keypair)){
             std::cerr << "DH can't keygen\n";
-            break;
+            return KeygenError;
         }
-    }while(0);
+        return None;
+    }();
     EVP_PKEY_CTX_free(pctx);
     EVP_PKEY_CTX_free(kctx);
     EVP_PKEY_free(params);
+    return err;
 }
 
 
-int DH_protocol::gen_secret(EVP_PKEY* peer){
+ErrorType DH_protocol::gen_secret(EVP_PKEY* peer){
     EVP_PKEY_CTX* dctx = nullptr; 
     size_t len = 0;
-    int failed = 1;
 
     _clear_secret();
 
-    do{
-
+    auto err = [&]() -> ErrorType{
         dctx = EVP_PKEY_CTX_new(this->keypair, NULL);
-        if(!dctx || !EVP_PKEY_derive_init(dctx)){
+        if(!dctx){
+            std::cerr << "DH context failed\n";
+            return OSSLError;
+        }
+        if(!EVP_PKEY_derive_init(dctx)){
             std::cerr << "DH can't init derive\n";
-            break;
+            return KeygenError;
         }
         if(!EVP_PKEY_derive_set_peer(dctx, peer)){
             std::cerr << "DH can't set peer\n";
-            break;
+            return KeygenError;
         }
         if(!EVP_PKEY_derive(dctx, NULL, &len)){
-            std::cerr << "DH can't get secret len\n";
-            break;
+            std::cerr << "DH can't get secerr len\n";
+            return KeygenError;
         }
         secret = (uchar_p)OPENSSL_malloc(len);
+        if(!secret){
+            std::cout << "OSSL malloc failed\n";
+            return OSSLError;
+        }
         if(!secret || !EVP_PKEY_derive(dctx, secret, &len)){
             std::cerr << "DH can't derive secret\n";
-            break;
+            return KeygenError;
         }
         
         slen = len;
-        failed = 0;
-    }while(0);
+        return None;
+    }();
 
     EVP_PKEY_CTX_free(dctx);
-    return failed;
+    return err;
 }
 
-std::expected<AES_GCM, const char*> DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, char* aad){
+std::expected<AES_GCM, ErrorType> DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, char* aad){
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
     uchar_p derived_key = nullptr;
-    int failed = 1;
 
-    do{
+    auto err = [&]() -> ErrorType{
         derived_key = (uchar_p)OPENSSL_malloc(AES_GCM::KEYLEN);
         if(!derived_key){
             std::cerr << "OPENSSL_malloc failed (gen_aes)\n";
-            break;
+            return OSSLError;
         }
         kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
         ctx = EVP_KDF_CTX_new(kdf);
         if(!ctx){
             std::cerr << "Can't get HKDF ctx\n";
-            break;
+            return OSSLError;
         }
         const char* info = "aes-gcm-256";
         char sha256_text[] = "SHA256";
@@ -133,14 +144,14 @@ std::expected<AES_GCM, const char*> DH_protocol::gen_aes(const unsigned char* sa
         };
         if(!EVP_KDF_derive(ctx, derived_key, AES_GCM::KEYLEN, params)){
             std::cerr << "Can't HKDF derive aes key\n";
-            break;
+            return KeygenError;
         }
 
-        failed = 0;
-    }while(0);
+        return None;
+    }();
     EVP_KDF_free(kdf);
     EVP_KDF_CTX_free(ctx);
-    if(failed) return std::unexpected("AES HKDF failed error\n");
+    if(err != None) return std::unexpected(err);
 
     AES_GCM ret(derived_key, aad);
 
@@ -150,46 +161,47 @@ std::expected<AES_GCM, const char*> DH_protocol::gen_aes(const unsigned char* sa
     return ret;
 }
 
-int DH_protocol::extract_pub(EVP_PKEY** pub){
+ErrorType DH_protocol::extract_pub(EVP_PKEY** pub){
     if (!keypair)
-        return 1;
+        return NoPrivate;
 
     EVP_PKEY *pubkey = nullptr;
     OSSL_PARAM *params = nullptr;
     EVP_PKEY_CTX *ctx_export = nullptr;
     EVP_PKEY_CTX *ctx_import = nullptr;
 
-    do{
+    auto err = [&]() -> ErrorType{
         // Export the public components from the original key
         ctx_export = EVP_PKEY_CTX_new_from_pkey(NULL, keypair, NULL);
         if (!ctx_export){
             std::cerr << "Ctx export failed\n";
-            break;
+            return OSSLError;
         }
 
         if (EVP_PKEY_todata(keypair, EVP_PKEY_PUBLIC_KEY, &params) <= 0){
             std::cerr << "Todata failed\n";
-            break;
+            return ExtractionError;
         }
 
         // Import only the public components into a new EVP_PKEY
         ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "X25519", NULL);  // or EC, etc.
         if (!ctx_import){
             std::cerr << "Ctx failed\n";
-            break;
+            return OSSLError;
         }
 
         if (EVP_PKEY_fromdata_init(ctx_import) <= 0){
             std::cerr << "Fromdata failed\n";
-            break;
+            return ExtractionError;
         }
 
         if (EVP_PKEY_fromdata(ctx_import, &pubkey, EVP_PKEY_PUBLIC_KEY, params) <= 0){
             pubkey = NULL;  // failed
             std::cerr << "Extraction failed\n";
-            break;
+            return ExtractionError;
         }
-    }while(0);
+        return None;
+    }();
 
     EVP_PKEY_CTX_free(ctx_export);
     EVP_PKEY_CTX_free(ctx_import);
@@ -197,7 +209,7 @@ int DH_protocol::extract_pub(EVP_PKEY** pub){
     EVP_PKEY_free(*pub);
     *pub = pubkey;
     pubkey = nullptr;
-    return 0;
+    return err;
 }
 
 void DH_protocol::_clear_secret(){

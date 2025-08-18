@@ -39,6 +39,8 @@ private:
     unsigned char iv[IVLEN];
     unsigned char tag[TAGLEN];
     char* aad;
+
+    bool sameIV;
 };
 
 #endif

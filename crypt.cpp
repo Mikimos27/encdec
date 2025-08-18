@@ -44,6 +44,9 @@ int test_aes(int argc, char** argv){
     for(int i = 0; i < len; i++){
         in[i] = (uchar)input.at(i);
     }
+
+
+    aes.encrypt(in, cipher, len);
     aes.encrypt(in, cipher, len);
 
     print_hex("ciphertext", cipher, len);
@@ -130,13 +133,12 @@ int test_rsa(int argc, char** argv){
     std::memcpy(enc, rsa.get_out_buff(), size);//UNINIT VALUE
     print_hex("encrypted string", rsa.get_out_buff(), size);
     print_hex("encrypted string", enc, size);
-    std::printf("HERE\n");
 
 
     rsa.decrypt(enc);
 
     unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
-    printf("outsize = %ld\n", rsa.get_out_size());
+    //printf("outsize = %ld\n", rsa.get_out_size());
     std::memcpy(get, rsa.get_out_buff(), rsa.get_out_size());
     get[rsa.get_out_size()] = 0;
     
@@ -145,7 +147,7 @@ int test_rsa(int argc, char** argv){
 
     std::printf("Decrypted string = ");
     std::fwrite(get, 1, rsa.get_out_size(), stdout);
-    std::cout << get << "\nout_size = " << rsa.get_out_size() << '\n';
+    std::cout << "\nout_size = " << rsa.get_out_size() << '\n';
 
     delete[] get;
     delete[] enc;
@@ -230,5 +232,5 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_sig(argc, argv);
+    return test_aes(argc, argv);
 }

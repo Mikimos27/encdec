@@ -64,9 +64,11 @@ void AES_GCM::gen_key(){
 }
 void AES_GCM::genIV(){
     RAND_bytes(iv, sizeof(iv));
+    sameIV = false;
 }
 
 void AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
+    if(sameIV) throw 2;
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
@@ -114,10 +116,10 @@ void AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
             std::cerr << "Tag extraction on encryption failed\n";
         }
     }while(0);
-    genIV();
 
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
+    sameIV = true;
 }
 void AES_GCM::decrypt(const uchar* ciphertext, uchar* plaintext, int length){
     EVP_CIPHER_CTX* ctx = nullptr;

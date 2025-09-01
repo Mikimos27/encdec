@@ -69,7 +69,14 @@ int main(int argc, char** argv){
     if(argc < 2){
         std::cout << "No key size given\nUsing default: 4096\n";
     }
-    else keysize = std::stoi(argv[1]);
+    else {
+        try{
+            keysize = std::stoi(argv[1]);
+        }catch(...){
+            std::cerr << "NAN given\n";
+            return 1;
+        }
+    }
     RSA_keys rsa;
     if(rsa.gen_key_pair(keysize) < 0){
         std::cerr << "Keys can't be generated\n";

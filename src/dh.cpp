@@ -133,7 +133,7 @@ std::expected<AES_GCM, ErrorType> DH_protocol::gen_aes(const unsigned char* salt
             std::cerr << "Can't get HKDF ctx\n";
             return OSSLError;
         }
-        const char* info = "aes-gcm-256";
+        const char* info = "ChaCha20-Poly1305";
         char sha256_text[] = "SHA256";
         OSSL_PARAM params[] = {
             OSSL_PARAM_construct_utf8_string("digest", sha256_text, 0),

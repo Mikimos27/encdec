@@ -22,8 +22,8 @@ void print_hex(const char* name, const uchar* str, size_t len){
     std::printf("\n");
 }
 
-/*
-int main(int argc, char** argv){
+
+int test_aes(int argc, char** argv){
     if(argc > 1){
         std::cerr << "Too many args\n";
         return 1;
@@ -63,10 +63,10 @@ int main(int argc, char** argv){
     delete[] cipher;
     delete[] out;
     return 0;
-}*/
+}
 
 
-int main(int argc, char** argv){
+int test_rsa(int argc, char** argv){
     int keysize = 4096;
     if(argc < 2){
         std::cout << "No key size given\nUsing default: 4096\n";
@@ -126,4 +126,49 @@ int main(int argc, char** argv){
     delete[] enc;
     delete[] get;
     return 0;
+}
+
+int test_sig(int argc, char** argv){
+    int keysize = 4096;
+    if(argc < 2){
+        std::cout << "No key size given\nUsing default: 4096\n";
+    }
+    else {
+        try{
+            keysize = std::stoi(argv[1]);
+        }catch(...){
+            std::cerr << "NAN given\n";
+            return 1;
+        }
+    }
+    RSA_keys rsa;
+    if(rsa.gen_key_pair(keysize) < 0){
+        std::cerr << "Keys can't be generated\n";
+        return 1;
+    }
+    rsa.write_pubPEM("pub.pem");
+    rsa.write_prvPEM("prv.pem", NULL);
+
+
+    const char* msg = "Halo halo halo kurna";
+    if(argc < 3){
+        std::cerr << "No message given or message too long\nUsing defaults\n";
+    }
+    else msg = argv[2];
+    try{
+        rsa.sign((const unsigned char*)msg, std::strlen(msg));
+    }catch(const std::exception& E){
+        std::cout << E.what() << '\n';
+        return 1;
+    }
+    std::cout << "Msg: " << msg << '\n';
+    print_hex("Sig", rsa.get_out_buff(), rsa.get_out_size());
+
+
+
+    return 0;
+}
+
+int main(int argc, char** argv){
+    return test_sig(argc, argv);
 }

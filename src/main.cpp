@@ -138,8 +138,18 @@ int test_dh(int argc, char** argv){
 
     char aad[] = "additional auth data";
 
-    auto k1 = *dh1.gen_aes(salt, saltlen, aad);
-    auto k2 = *dh2.gen_aes(salt, saltlen, aad);
+    auto ke1 = dh1.gen_aes(salt, saltlen, aad);
+    auto ke2 = dh2.gen_aes(salt, saltlen, aad);
+    if(!ke1.has_value()) {
+        std::cerr << "DH AES F\n";
+        return -1;
+    }
+    if(!ke2.has_value()) {
+        std::cerr << "DH AES F\n";
+        return -1;
+    }
+    auto k1 = *ke1;
+    auto k2 = *ke2;
 
     if(k1.set_iv(iv)) std::cerr << "DH set iv F\n";
     if(k2.set_iv(iv)) std::cerr << "DH set iv F\n";

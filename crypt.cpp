@@ -1,8 +1,10 @@
 #include "aes/aes.h"
 #include "rsa/rsa.h"
+#include "dh/dh.h"
 extern "C"{
-#include <openssl/pem.h>
 #include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/pem.h>
 }
 #include <iostream>
 #include <cstdio>
@@ -186,6 +188,42 @@ int test_sig(int argc, char** argv){
     return 0;
 }
 
+int test_dh(int argc, char** argv){
+    DH_protocol dh1, dh2;
+
+    dh1.gen_key();
+    dh2.gen_key();
+    EVP_PKEY* pub1 = nullptr, *pub2 = nullptr;
+    
+    dh1.extract_pub(&pub1);
+    dh2.extract_pub(&pub2);
+
+    constexpr size_t saltlen = 32;
+    unsigned char salt[saltlen] = {0};
+    RAND_bytes(salt, saltlen);
+
+    unsigned char iv[AES_GCM::IVLEN] = {0};
+    RAND_bytes(iv, AES_GCM::IVLEN);
+
+    dh1.gen_secret(pub2);
+    dh2.gen_secret(pub1);
+
+    auto k1 = dh1.gen_aes(salt, saltlen);
+    auto k2 = dh2.gen_aes(salt, saltlen);
+
+    k1.set_iv(iv);
+    k2.set_iv(iv);
+
+    print_hex("k1", k1.get_key(), 32);
+    print_hex("k2", k2.get_key(), 32);
+
+    EVP_PKEY_free(pub1);
+    EVP_PKEY_free(pub2);
+
+
+    return 0;
+}
+
 int main(int argc, char** argv){
-    return test_aes(argc, argv);
+    return test_dh(argc, argv);
 }

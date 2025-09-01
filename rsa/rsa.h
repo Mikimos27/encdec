@@ -42,10 +42,12 @@ public:
 
     const unsigned char* const get_out_buff();
     const std::size_t get_out_size();
+    const std::size_t get_ciph_size();
 
 private:
     
     EVP_PKEY* _extract_pub(EVP_PKEY* pkey);
+    void _clear_buff();
 
 
     EVP_PKEY* prv;

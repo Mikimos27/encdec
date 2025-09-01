@@ -1,6 +1,7 @@
 #include "aes/aes.h"
 #include "rsa/rsa.h"
 #include "dh/dh.h"
+#include "ed25519/ed25519.h"
 extern "C"{
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -154,8 +155,8 @@ int test_rsa(int argc, char** argv){
 }
 
 int test_sig(int argc, char** argv){
-    RSA_keys rsa;
-    rsa.gen_key_pair(1024);
+    Ed25519 rsa;
+    rsa.gen_key_pair(256);
 
 
     const char* msg = "Halo halo halo kurna";
@@ -208,11 +209,15 @@ int test_dh(int argc, char** argv){
     dh1.gen_secret(pub2);
     dh2.gen_secret(pub1);
 
-    auto k1 = dh1.gen_aes(salt, saltlen);
-    auto k2 = dh2.gen_aes(salt, saltlen);
+    char aad[] = "additional auth data";
+
+    auto k1 = *dh1.gen_aes(salt, saltlen, aad);
+    auto k2 = *dh2.gen_aes(salt, saltlen, aad);
 
     k1.set_iv(iv);
     k2.set_iv(iv);
+
+    //share aad
 
     print_hex("k1", k1.get_key(), AES_GCM::KEYLEN);
     print_hex("k2", k2.get_key(), AES_GCM::KEYLEN);
@@ -225,5 +230,5 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_dh(argc, argv);
+    return test_sig(argc, argv);
 }

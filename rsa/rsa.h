@@ -20,11 +20,11 @@ public:
     void write_pubDER(const char* filepath);
     void write_pub_to(std::FILE* const fp);
 
-    void load_prvPEM(const char* filepath, const char* passwd);
-    void write_prvPEM(const char* filepath, const char* passwd);
-    void load_prvDER(const char* filepath, const char* passwd);
-    void write_prvDER(const char* filepath, const char* passwd);
-    void write_prv_to(std::FILE* const fp, const char* const passwd);
+    void load_prvPEM(const char* filepath, const char* passwd);      //
+    void write_prvPEM(const char* filepath, const char* passwd);     //
+    void load_prvDER(const char* filepath, const char* passwd);      // they eat passwors (set to zero) 
+    void write_prvDER(const char* filepath, const char* passwd);     //
+    void write_prv_to(std::FILE* const fp, const char* passwd);//
 
     void set_key_prv(EVP_PKEY** keys); //Takes ownership
     const EVP_PKEY* const get_key_prv();

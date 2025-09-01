@@ -1,3 +1,4 @@
 - add FIPS provider???
 - DER implementation
 - PEM password AES-CBC -> AES-GCM
+- get rid of exceptions

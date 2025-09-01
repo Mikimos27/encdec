@@ -34,21 +34,4 @@ private:
     const unsigned char* aad;
 };
 
-
-
-
-
-
-/*
-int genRSApair(size_t byteKeySize, EVP_PKEY*);
-int readRSApairPEM(FILE* priv, FILE* pub, EVP_PKEY**);
-int writeRSApairPEM(FILE* priv, FILE* pub, EVP_PKEY*);
-int readRSApairDER(FILE* priv, FILE* pub, EVP_PKEY**);
-int writeRSApairDER(FILE* priv, FILE* pub, EVP_PKEY*);
-int encryptRSA(EVP_PKEY*, char* in, size_t in_len, char* out, size_t out_len);
-int decryptRSA(EVP_PKEY*, char* in, size_t in_len, char* out, size_t out_len);
-
-int genAES(kkk
-int genIV(*/
-
 #endif

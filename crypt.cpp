@@ -198,7 +198,7 @@ int test_dh(int argc, char** argv){
     dh1.extract_pub(&pub1);
     dh2.extract_pub(&pub2);
 
-    constexpr size_t saltlen = 32;
+    constexpr size_t saltlen = AES_GCM::KEYLEN;
     unsigned char salt[saltlen] = {0};
     RAND_bytes(salt, saltlen);
 
@@ -214,8 +214,8 @@ int test_dh(int argc, char** argv){
     k1.set_iv(iv);
     k2.set_iv(iv);
 
-    print_hex("k1", k1.get_key(), 32);
-    print_hex("k2", k2.get_key(), 32);
+    print_hex("k1", k1.get_key(), AES_GCM::KEYLEN);
+    print_hex("k2", k2.get_key(), AES_GCM::KEYLEN);
 
     EVP_PKEY_free(pub1);
     EVP_PKEY_free(pub2);

@@ -202,15 +202,22 @@ int test_dh(int argc, char** argv){
     return 0;
 }
 
-int main(int argc, char** argv){
-    unsigned char* msg = (unsigned char*)argv[1];
+int hash_test(int argc, char** argv){
+    unsigned char* msg = (unsigned char*)"To hash";
+    if(argc > 1) msg = (unsigned char*)argv[1];
+    if(argc <= 1) std::cout  << "Msg: " << msg << '\n';
     int msglen = std::strlen((char*)msg);
     auto out = *calc_sha256(msg, msglen);
     unsigned char raw[32];
     for(size_t i = 0; i < 32; i++) raw[i] = out[i];
     print_hex("sha256", raw, 32);
 
-    return test_aes(argc, argv);
+    return 0;
+}
+
+int main(int argc, char** argv){
+    return hash_test(argc, argv);
+//    return test_aes(argc, argv);
 //    return test_sig(argc, argv);
 //    return test_dh(argc, argv);
 }

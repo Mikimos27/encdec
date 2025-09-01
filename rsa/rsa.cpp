@@ -1,4 +1,5 @@
 #include "rsa.h"
+extern "C"{
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
@@ -6,10 +7,14 @@
 #include <openssl/core_names.h>
 #include <cstdio>
 #include <cstring>
+}
 
 #include <string>
 #include <iostream>
 
+#include "rsa_PUBMAN.cpp"
+#include "rsa_PRVMAN.cpp"
+#include "rsa_crypto.cpp"
 
 RSA_keys::RSA_keys(){
     prv = EVP_PKEY_new();
@@ -19,27 +24,33 @@ RSA_keys::RSA_keys(){
 RSA_keys::~RSA_keys(){
     if(prv != NULL) EVP_PKEY_free(prv);
     if(pub != NULL) EVP_PKEY_free(pub);
+    keysize = 0;
 }
 
 
-#include "rsa_PUBMAN.cpp"
-#include "rsa_PRVMAN.cpp"
-#include "rsa_crypto.cpp"
-
-
-
-
-void RSA_keys::set_key(EVP_PKEY** keys){
-
+void RSA_keys::set_key_prv(EVP_PKEY** keys){
+    EVP_PKEY_free(prv);
+    prv = *keys;
+    *keys = nullptr;
+    _extract_pub(prv);
 }
-void RSA_keys::get_key(EVP_PKEY** keys){
-
+const EVP_PKEY* const RSA_keys::get_key_prv(){
+    return prv;
 }
 
+void RSA_keys::set_key_pub(EVP_PKEY** keys){
+    EVP_PKEY_free(pub);
+    pub = *keys;
+    *keys = nullptr;
+}
+const EVP_PKEY* const RSA_keys::get_key_pub(){
+    return pub;
+}
 
-void RSA_keys::gen_key_pair(int keysize){
+int RSA_keys::gen_key_pair(int keysize){
     if(keysize % 8){
-        ///////////////////////////////////////////////////////////////
+        std::cerr << "Key size not divisible by 8\n";
+        return -1;
     }
     EVP_PKEY_CTX* ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
@@ -81,6 +92,7 @@ void RSA_keys::gen_key_pair(int keysize){
 
     pub = _extract_pub(prv);
     this->keysize = keysize;
+    return 0;
 }
 
 

@@ -19,6 +19,10 @@ void RSA_keys::write_pubDER(const char* filepath){
 
 }
 
+void RSA_keys::write_pub_to(std::FILE* const fp){
+    PEM_write_PUBKEY_ex(fp, this->pub, NULL, NULL);
+}
+
 EVP_PKEY* RSA_keys::_extract_pub(EVP_PKEY* keypair){
     if (!keypair)
         return NULL;

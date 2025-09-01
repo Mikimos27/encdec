@@ -17,6 +17,16 @@ extern "C"{
 
 using uchar = unsigned char;
 
+AES_GCM::AES_GCM() : key{0}, iv{0}, tag{0}, aad{0} {}
+AES_GCM::AES_GCM(uchar* key, const char* aad){
+    memcpy(this->key, key, AES_GCM::KEYLEN);
+
+
+    int aad_len = std::strlen(aad);
+    this->aad = new char[aad_len + 1];
+    std::strcpy(this->aad, aad);
+    genIV();
+}
 
 AES_GCM::AES_GCM(const char* aad)
 : tag{0} {
@@ -47,6 +57,7 @@ AES_GCM::~AES_GCM(){
     OPENSSL_cleanse((void*)this->key, AES_GCM::KEYLEN);
     delete[] aad;
     aad = nullptr;
+    ERR_print_errors_fp(stderr);
 }
 
 void AES_GCM::genIV(){

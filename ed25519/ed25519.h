@@ -1,0 +1,61 @@
+#define OPENSSL_API_COMPAT 0x30500010
+
+#ifndef ED25519_H
+#define ED25519_H
+extern "C"{
+#include <openssl/evp.h>
+}
+#include <string>
+#include <cstdio>
+#include <cstddef>
+
+
+class Ed25519{
+public:
+    Ed25519();
+    ~Ed25519();
+
+    void load_pubPEM(const char* filepath);
+    void write_pubPEM(const char* filepath);
+    void load_pubDER(const char* filepath);
+    void write_pubDER(const char* filepath);
+    void write_pub_to(std::FILE* const fp);
+
+    void load_prvPEM(const char* filepath, char* passwd);      //
+    void write_prvPEM(const char* filepath, char* passwd);     //
+    void load_prvDER(const char* filepath, char* passwd);      // they eat passwors (set to zero) 
+    void write_prvDER(const char* filepath, char* passwd);     //
+    void write_prv_to(std::FILE* const fp, char* passwd);      //
+
+    void set_key_prv(EVP_PKEY** keys); //Takes ownership
+    const EVP_PKEY* const get_key_prv();
+
+    void set_key_pub(EVP_PKEY** keys); //Takes ownership
+    const EVP_PKEY* const get_key_pub();
+
+    int gen_key_pair(int keysize);
+    
+
+    void sign(const unsigned char* msg, int msglen);
+    int verify(const unsigned char* msg, int msglen, const unsigned char* signature, int siglen);
+
+    const unsigned char* const get_out_buff();
+    const std::size_t get_out_size();
+    const std::size_t get_ciph_size();
+
+private:
+    
+    int _extract_pub(EVP_PKEY* pkey, EVP_PKEY** pub);
+    void _clear_buff();
+    void _free_key(EVP_PKEY** pkey);
+
+
+    EVP_PKEY* prv;
+    EVP_PKEY* pub;
+    int keysize;
+
+    unsigned char* out_buff;
+    std::size_t out_size;
+};
+
+#endif

@@ -93,7 +93,7 @@ int test_sig(int argc, char** argv){
     if(edcs.load_prvPEM("prv.pem", p2)) std::cerr << "load from prv.pem F\n";
 
 
-    const char* msg = "Halo halo halo kurna";
+    const char* msg = "Wiadomość do podpisania";
     if(argc < 2){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
@@ -169,6 +169,7 @@ int test_dh(int argc, char** argv){
     print_hex("iv1", k2.get_iv(), AES_GCM::IVLEN);
     printf("aad1 = %s\n", k1.get_aad());
     printf("aad2 = %s\n", k2.get_aad());
+    std::cout << "Tag1 does" << (!is_zero(k1.get_tag(), AES_GCM::TAGLEN) ? "" : "n't") << " exist\n";
     
     uchar in[] = "Secret";
     uchar c1[7] = {0};
@@ -182,6 +183,7 @@ int test_dh(int argc, char** argv){
     print_hex("tag2", k2.get_tag(), AES_GCM::TAGLEN);
     k1.decrypt(c1, o1, 6);
     k2.decrypt(c2, o2, 6);
+    std::cout << "Tag1 does" << (!is_zero(k1.get_tag(), AES_GCM::TAGLEN) ? "" : "n't") << " exist\n";
 
     print_hex("k1 enc", c1, 6);
     print_hex("k2 enc", c2, 6);
@@ -216,8 +218,8 @@ int hash_test(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return hash_test(argc, argv);
+//    return hash_test(argc, argv);
 //    return test_aes(argc, argv);
 //    return test_sig(argc, argv);
-//    return test_dh(argc, argv);
+    return test_dh(argc, argv);
 }

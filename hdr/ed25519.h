@@ -29,12 +29,12 @@ public:
     ErrorType write_prv_to(std::FILE* const fp, char* passwd);      //
 
     ErrorType set_key_prv(EVP_PKEY* keys);
-    const EVP_PKEY* const get_key_prv();
+    EVP_PKEY* get_key_prv();
 
     ErrorType set_key_pub(EVP_PKEY* keys);
-    const EVP_PKEY* const get_key_pub();
+    EVP_PKEY* get_key_pub();
 
-    ErrorType gen_key_pair(int keysize);
+    ErrorType gen_key_pair();
     
 
     ErrorType sign(const unsigned char* msg, int msglen);
@@ -53,7 +53,6 @@ private:
 
     EVP_PKEY* prv;
     EVP_PKEY* pub;
-    int keysize;
 
     unsigned char* out_buff;
     std::size_t out_size;

@@ -12,14 +12,17 @@ rsa.o: rsa/*
 aes.o: aes/aes.h aes/aes.cpp
 	$(CXX) $(CXXFLAGS) -c $^
 
+dh.o: dh/dh.h dh/dh.cpp
+	$(CXX) $(CXXFLAGS) -c $^
+
 crypt.o: crypt.cpp
 	$(CXX) $(CXXFLAGS) -c $^
 
-crypto.elf: rsa.o aes.o crypt.o
+crypto.elf: rsa.o aes.o dh.o crypt.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 
-mem.elf: rsa.o aes.o crypt.o
+mem.elf: rsa.o aes.o dh.o crypt.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ -fsanitize=address -fsanitize=bounds
 
 

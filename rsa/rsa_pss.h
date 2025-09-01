@@ -10,14 +10,14 @@ public:
     RSA_PSS_keys();
     ~RSA_PSS_keys();
 
-    void load_pubPEM(const char* filepath, const char* passwd);
-    void load_prvPEM(const char* filepath, const char* passwd);
-    void load_pubDER(const char* filepath, const char* passwd);
-    void load_prvDER(const char* filepath, const char* passwd);
+    void load_pubPEM(const char* filepath);
+    void write_pubPEM(const char* filepath);
+    void load_pubDER(const char* filepath);
+    void write_pubDER(const char* filepath);
 
-    void write_pubPEM(const char* filepath, const char* passwd);
+    void load_prvPEM(const char* filepath, const char* passwd);
     void write_prvPEM(const char* filepath, const char* passwd);
-    void write_pubDER(const char* filepath, const char* passwd);
+    void load_prvDER(const char* filepath, const char* passwd);
     void write_prvDER(const char* filepath, const char* passwd);
 
     void set_key(EVP_PKEY** keys);

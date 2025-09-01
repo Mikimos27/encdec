@@ -1,9 +1,9 @@
 CXX = g++
-CXXFLAGS = -g -Wall -Werror -O2 -lcrypto -std=c++23
+CXXFLAGS = -g -Wall -Werror -O2 -lcrypto -std=c++23#6
 
 SRC = $(wildcard src/*.cpp) 
 OBJ = $(SRC:.cpp=.o)
-BIN = crypto
+BIN = crypto mem
 
 all: $(BIN)
 
@@ -24,7 +24,9 @@ mem: $(OBJ)
 
 
 
-.PHONY: clean
+.PHONY: clean remake
 
 clean:
 	rm -f $(BIN) $(OBJ)
+
+remake: clean $(BIN)

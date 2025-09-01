@@ -6,9 +6,10 @@
 #include <openssl/core_names.h>
 #include <cstdio>
 #include <cstddef>
-#include <string>
 #include <cstring>
-#include <memory>
+
+#include <string>
+#include <iostream>
 #include "aes_256_gcm.h"
 
 
@@ -38,37 +39,45 @@ void AES_256_GCM_key::encrypt(const uchar* plaintext, uchar* ciphertext, int len
 
     ctx = EVP_CIPHER_CTX_new();
     cipher = EVP_CIPHER_fetch(NULL, "AES-256-GCM", NULL);
-    if(!ctx || !cipher){
-        std::perror("Fetch failed\n");
-    }
-    int taglen = TAGLEN;
-    int ivlen = IVLEN;
-    int plen = length;//Vunurable???????????????????????????
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
-        OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_AEAD_TAGLEN, &taglen),
-        OSSL_PARAM_END
-    };
 
-    if(!EVP_EncryptInit_ex2(ctx, cipher, key, iv, params)){
-        std::perror("Init failed\n");
-    }
-    if(!EVP_EncryptUpdate(ctx, NULL, &outlen, aad, strlen((char*)aad))){
-        std::perror("Init failed\n");
-    }
-    if(!EVP_EncryptUpdate(ctx, ciphertext, &outlen, plaintext, plen)){
-        std::perror("Init failed\n");
-    }
-    if(!EVP_EncryptFinal_ex(ctx, ciphertext + outlen, &tmplen)){
-        std::perror("Init failed\n");
-    }
-    OSSL_PARAM get_params[] = {
-        OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, tag, TAGLEN),
-        OSSL_PARAM_END
-    };
-    if(!EVP_CIPHER_CTX_get_params(ctx, get_params)){
 
-    }
+    do{
+        if(!ctx || !cipher){
+            std::cerr << "Fetch failed\n";
+        }
+        int taglen = TAGLEN;
+        int ivlen = IVLEN;
+        int plen = length;//Vunurable???????????????????????????
+        OSSL_PARAM params[] = {
+            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
+            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_AEAD_TAGLEN, &taglen),
+            OSSL_PARAM_END
+        };
+
+        if(!EVP_EncryptInit_ex2(ctx, cipher, key, iv, params)){
+            std::cerr << "Init failed\n";
+            break;
+        }
+        if(!EVP_EncryptUpdate(ctx, NULL, &outlen, aad, strlen((char*)aad))){
+            std::cerr << "AAD addition failed\n";
+            break;
+        }
+        if(!EVP_EncryptUpdate(ctx, ciphertext, &outlen, plaintext, plen)){
+            std::cerr << "Encrypting plaintext failed\n";
+            break;
+        }
+        if(!EVP_EncryptFinal_ex(ctx, ciphertext + outlen, &tmplen)){
+            std::cerr << "Encryption finalization failed\n";
+            break;
+        }
+        OSSL_PARAM get_params[] = {
+            OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, tag, TAGLEN),
+            OSSL_PARAM_END
+        };
+        if(!EVP_CIPHER_CTX_get_params(ctx, get_params)){
+            std::cerr << "Tag extraction on encryption failed\n";
+        }
+    }while(0);
 
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
@@ -84,7 +93,7 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
 
     do{
         if(!ctx || !cipher){
-            std::perror("Can't fetch cipher\n");
+            std::cerr << "Can't fetch cipher\n";
             break;
         }
         OSSL_PARAM params[] = {
@@ -93,19 +102,19 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
             OSSL_PARAM_END
         };
         if(!EVP_DecryptInit_ex2(ctx, cipher, key, iv, params)){
-            std::perror("Decrypt init failed\n");
+            std::cerr << "Decrypt init failed\n";
             break;
         }
         if(!EVP_DecryptUpdate(ctx, NULL, &outlen, aad, std::strlen((char*)aad))){
-            std::perror("Decrypt AAD failed\n");
+            std::cerr << "Decrypt AAD failed\n";
             break;
         }
         if(!EVP_DecryptUpdate(ctx, plaintext, &outlen, ciphertext, length)){
-            std::perror("Decrypt ciphertext failed\n");
+            std::cerr << "Decrypt ciphertext failed\n";
             break;
         }
         if(!EVP_DecryptFinal_ex(ctx, plaintext + outlen, &tmplen)){
-            std::perror("Decryption failed: tag mismatch, tampering or bad decryption key\n");
+            std::cerr << "Decryption failed: tag mismatch, tampering or bad decryption key\n";
             break;
         }
     }while(0);

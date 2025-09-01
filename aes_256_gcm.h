@@ -5,9 +5,9 @@
 
 class AES_256_GCM_key{
 public:
-    static constexpr size_t KEYLEN = 32;
-    static constexpr size_t TAGLEN = 16;
-    static constexpr size_t IVLEN = 12;
+    static constexpr std::size_t KEYLEN = 32;
+    static constexpr std::size_t TAGLEN = 16;
+    static constexpr std::size_t IVLEN = 12;
 
 
 

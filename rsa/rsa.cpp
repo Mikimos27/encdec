@@ -25,8 +25,14 @@ RSA_keys::RSA_keys(){
     out_size = 0;
 }
 RSA_keys::~RSA_keys(){
-    if(prv != NULL) EVP_PKEY_free(prv);
-    if(pub != NULL) EVP_PKEY_free(pub);
+    if(prv != NULL) {
+        OPENSSL_cleanse(prv, sizeof(prv));
+        EVP_PKEY_free(prv);
+    }
+    if(pub != NULL){
+        OPENSSL_cleanse(pub, sizeof(pub));
+        EVP_PKEY_free(pub);
+    }
     keysize = 0;
     _clear_buff();
     ERR_print_errors_fp(stderr);
@@ -34,6 +40,7 @@ RSA_keys::~RSA_keys(){
 
 
 void RSA_keys::set_key_prv(EVP_PKEY** keys){
+    OPENSSL_cleanse(prv, sizeof(prv));
     EVP_PKEY_free(prv);
     prv = *keys;
     *keys = nullptr;
@@ -48,6 +55,8 @@ const EVP_PKEY* const RSA_keys::get_key_prv(){
 }
 
 void RSA_keys::set_key_pub(EVP_PKEY** keys){
+    OPENSSL_cleanse(pub, sizeof(pub));
+    OPENSSL_cleanse(prv, sizeof(prv));
     EVP_PKEY_free(pub);
     EVP_PKEY_free(prv);
     prv = nullptr;
@@ -100,6 +109,8 @@ int RSA_keys::gen_key_pair(int keysize){
     EVP_PKEY_CTX_free(ctx);
 
 
+    OPENSSL_cleanse(this->prv, sizeof(this->prv));
+    OPENSSL_cleanse(this->pub, sizeof(this->pub));
     EVP_PKEY_free(this->prv);
     EVP_PKEY_free(this->pub);
     prv = pkey;
@@ -123,7 +134,10 @@ const std::size_t RSA_keys::get_ciph_size(){
 }
 
 void RSA_keys::_clear_buff(){
-    if(out_buff) OPENSSL_free(out_buff);
+    if(out_buff){
+        OPENSSL_cleanse(out_buff, sizeof(out_buff));
+        OPENSSL_free(out_buff);
+    }
     out_buff = nullptr;
     out_size = 0;
 }

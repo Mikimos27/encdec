@@ -6,6 +6,8 @@
 #include <cstddef>
 #include "error.h"
 
+#include <tuple>
+
 class AES_GCM{
 public:
     static constexpr std::size_t KEYLEN = 32;
@@ -22,7 +24,15 @@ public:
     ErrorType gen_key();
     ErrorType genIV();
 
-    ErrorType encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
+    struct enc_ret{
+        const unsigned char* const iv;
+        const unsigned char* const tag;
+        ErrorType err;
+
+        operator bool() const { return (bool)err; }
+    };
+
+    enc_ret encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
     ErrorType decrypt(const unsigned char* ciphertext, unsigned char* plaintext, int length);
    
     const unsigned char* get_tag();

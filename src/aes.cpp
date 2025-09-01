@@ -70,8 +70,8 @@ ErrorType AES_GCM::genIV(){
     return err == 1 ? None : KeygenError;
 }
 
-ErrorType AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
-    if(sameIV) return SameIV;
+AES_GCM::enc_ret AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
+    if(sameIV) return { get_iv(), get_tag(), SameIV };
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
@@ -79,7 +79,7 @@ ErrorType AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length
 
 
     ctx = EVP_CIPHER_CTX_new();
-    cipher = EVP_CIPHER_fetch(NULL, "AES-256-GCM", NULL);
+    cipher = EVP_CIPHER_fetch(NULL, "ChaCha20-Poly1305", NULL);
 
 
     auto err = [&]() -> ErrorType{
@@ -127,7 +127,7 @@ ErrorType AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length
     EVP_CIPHER_CTX_free(ctx);
     sameIV = true; //???? what if fail???
 
-    return err;
+    return { get_iv(), get_tag(), err };
 }
 ErrorType AES_GCM::decrypt(const uchar* ciphertext, uchar* plaintext, int length){
     EVP_CIPHER_CTX* ctx = nullptr;
@@ -136,7 +136,7 @@ ErrorType AES_GCM::decrypt(const uchar* ciphertext, uchar* plaintext, int length
     int tmplen = 0;
     std::size_t ivlen = IVLEN;
     ctx = EVP_CIPHER_CTX_new();
-    cipher = EVP_CIPHER_fetch(NULL, "AES-256-GCM", NULL);
+    cipher = EVP_CIPHER_fetch(NULL, "ChaCha20-Poly1305", NULL);
 
     auto err = [&]() -> ErrorType{
         if(!ctx || !cipher){

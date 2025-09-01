@@ -12,9 +12,8 @@ all: $(BIN)
 #	$(CXX) $(CXXFLAGS) -c rsa/rsa.cpp
 
 
-%.o: %.cpp ../hdr/%.h
+%.o: %.cpp ../hdr/%.h hdr/error.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
 
 $(BIN): $(OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^

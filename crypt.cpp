@@ -105,15 +105,18 @@ int main(int argc, char** argv){
     rsa.decrypt(enc);
 
     std::printf("%d\n", size);
-    unsigned char* get = new unsigned char[rsa.get_out_size()];
-    setutu(rsa.get_out_buff(), get, rsa.get_out_size());
+    unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
+    //setutu(rsa.get_out_buff(), get, rsa.get_out_size());
+    std::memcpy(get, rsa.get_out_buff(), rsa.get_out_size());
+    get[rsa.get_out_size()] = 0;
+    
 
 
 
     print_hex("encrypted string", enc, size);
     std::printf("Decrypted string = ");
-    std::fwrite(get, 1, rsa.get_out_size(), stdout);
-    std::cout << '\n';
+    //std::fwrite(get, 1, rsa.get_out_size(), stdout);
+    std::cout << get << "\nout_size = " << rsa.get_out_size() << '\n';
 
 
     ERR_print_errors_fp(stderr);

@@ -1,9 +1,11 @@
+#define OPENSSL_API_COMPAT 0x30500010
+
 #ifndef AES_256_GCM_H
 #define AES_256_GCM_H
 
 #include <cstddef>
 
-class AES_256_GCM_key{
+class AES_GCM{
 public:
     static constexpr std::size_t KEYLEN = 32;
     static constexpr std::size_t TAGLEN = 16;
@@ -11,8 +13,10 @@ public:
 
 
 
-    AES_256_GCM_key(const char* aad);
-    ~AES_256_GCM_key();
+    AES_GCM(const char* aad);
+    AES_GCM(const AES_GCM& other);
+    AES_GCM(AES_GCM&& other);
+    ~AES_GCM();
 
     void genIV();
 
@@ -22,7 +26,7 @@ public:
     const unsigned char* get_tag();
     const unsigned char* get_key();
     const unsigned char* get_iv();
-    const unsigned char* get_aad();
+    const char* get_aad();
 
     void set_key(unsigned char (&arr)[KEYLEN]);
     void set_iv(unsigned char (&arr)[IVLEN]);
@@ -31,7 +35,7 @@ private:
     unsigned char key[KEYLEN];
     unsigned char iv[IVLEN];
     unsigned char tag[TAGLEN];
-    const unsigned char* aad;
+    char* aad;
 };
 
 #endif

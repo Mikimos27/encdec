@@ -1,9 +1,11 @@
+extern "C"{
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
 #include <openssl/core_names.h>
+}
 #include <cstdio>
 #include <cstddef>
 #include <cstring>
@@ -16,20 +18,41 @@
 using uchar = unsigned char;
 
 
-AES_256_GCM_key::AES_256_GCM_key(const char* aad)
-: tag{0}, aad{(unsigned char*)aad} {
+AES_GCM::AES_GCM(const char* aad)
+: tag{0} {
     RAND_bytes(key, sizeof(key));
+    int aad_len = std::strlen(aad);
+    this->aad = new char[aad_len + 1];
+    std::strcpy(this->aad, aad);
     genIV();
 }
-AES_256_GCM_key::~AES_256_GCM_key(){
+AES_GCM::AES_GCM(const AES_GCM& other){
+    memcpy(this->key, other.key, AES_GCM::KEYLEN);
+    memcpy(this->iv, other.iv, AES_GCM::IVLEN);
+    memcpy(this->tag, other.tag, AES_GCM::TAGLEN);
 
+    int aad_len = std::strlen(other.aad);
+    this->aad = new char[aad_len + 1];
+    std::strcpy(this->aad, other.aad);
+}
+AES_GCM::AES_GCM(AES_GCM&& other){
+    memcpy(this->key, other.key, AES_GCM::KEYLEN);
+    memcpy(this->iv, other.iv, AES_GCM::IVLEN);
+    memcpy(this->tag, other.tag, AES_GCM::TAGLEN);
+
+    this->aad = other.aad;
+    other.aad = nullptr;
+}
+AES_GCM::~AES_GCM(){
+    OPENSSL_cleanse((void*)this->key, AES_GCM::KEYLEN);
+    delete[] aad;
 }
 
-void AES_256_GCM_key::genIV(){
+void AES_GCM::genIV(){
     RAND_bytes(iv, sizeof(iv));
 }
 
-void AES_256_GCM_key::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
+void AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
@@ -58,7 +81,7 @@ void AES_256_GCM_key::encrypt(const uchar* plaintext, uchar* ciphertext, int len
             std::cerr << "Init failed\n";
             break;
         }
-        if(!EVP_EncryptUpdate(ctx, NULL, &outlen, aad, strlen((char*)aad))){
+        if(!EVP_EncryptUpdate(ctx, NULL, &outlen, (uchar*)aad, strlen(aad))){
             std::cerr << "AAD addition failed\n";
             break;
         }
@@ -82,7 +105,7 @@ void AES_256_GCM_key::encrypt(const uchar* plaintext, uchar* ciphertext, int len
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
 }
-void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int length){
+void AES_GCM::decrypt(const uchar* ciphertext, uchar* plaintext, int length){
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
@@ -105,7 +128,7 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
             std::cerr << "Decrypt init failed\n";
             break;
         }
-        if(!EVP_DecryptUpdate(ctx, NULL, &outlen, aad, std::strlen((char*)aad))){
+        if(!EVP_DecryptUpdate(ctx, NULL, &outlen, (uchar*)aad, std::strlen(aad))){
             std::cerr << "Decrypt AAD failed\n";
             break;
         }
@@ -124,28 +147,28 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
     EVP_CIPHER_CTX_free(ctx);
 }
 
-const unsigned char* AES_256_GCM_key::get_tag(){
+const unsigned char* AES_GCM::get_tag(){
     return tag; 
 }
-const unsigned char* AES_256_GCM_key::get_key(){
+const unsigned char* AES_GCM::get_key(){
     return key; 
 }
-const unsigned char* AES_256_GCM_key::get_iv(){
+const unsigned char* AES_GCM::get_iv(){
     return iv; 
 }
 
-const unsigned char* AES_256_GCM_key::get_aad(){
+const char* AES_GCM::get_aad(){
     return aad;
 }
 
 
-void AES_256_GCM_key::set_key(unsigned char (&arr)[KEYLEN]){
+void AES_GCM::set_key(unsigned char (&arr)[KEYLEN]){
     for(std::size_t i = 0; i < KEYLEN; i++){
         key[i] = arr[i];
     }
 }
 
-void AES_256_GCM_key::set_iv(unsigned char (&arr)[IVLEN]){
+void AES_GCM::set_iv(unsigned char (&arr)[IVLEN]){
     for(std::size_t i = 0; i < IVLEN; i++){
         iv[i] = arr[i];
     }

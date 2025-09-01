@@ -4,3 +4,7 @@ EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PSS_PADDING);
 
 So, "RSA" keys are more flexible, while "RSA-PSS" keys are more strict and safe for signature-only use cases.
                                                                                                         ~ChatGPT
+
+
+
+Problem when giving 1024 bit keys where "corrupted size vs prev_size"

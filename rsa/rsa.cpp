@@ -31,6 +31,7 @@ RSA_keys::~RSA_keys(){
     delete[] out_buff;
     out_buff = nullptr;
     out_size = 0;
+    ERR_print_errors_fp(stderr);
 }
 
 

@@ -7,6 +7,7 @@ extern "C"{
 #include <iostream>
 #include <cstdio>
 #include <cstddef>
+#include <cstring>
 #include <string>
 #define OPENSSL_API_COMPAT 0x30500010
 
@@ -86,16 +87,23 @@ int main(int argc, char** argv){
     rsa.write_pubPEM("pub.pem");
     rsa.write_prvPEM("prv.pem", "e");
 
-    RSA_keys from_file;
-    from_file.load_prvPEM("prv.pem", "e");
+
     char msg[] = "Habla habla habla"; 
     rsa.encrypt((unsigned char*)msg, sizeof(msg));
-    ERR_print_errors_fp(stderr);
 
-    std::cout << "out_size = " << rsa.get_out_size() << '\n';
+    int size = rsa.get_out_size();
+    unsigned char* enc = new unsigned char[size];
+    std::strcpy((char*)enc, (char*)rsa.get_out_buff());
+    //rsa.decrypt(enc);
 
-    print_hex("encrypted string", rsa.get_out_buff(), rsa.get_out_size());
+    std::printf("%d\n", size);
 
 
+
+    //print_hex("encrypted string", enc, size);
+
+
+    //ERR_print_errors_fp(stderr);
+    delete[] enc;
     return 0;
 }

@@ -12,7 +12,6 @@ extern "C"{
 #include <cstdio>
 #include <iostream>
 
-using uchar_p = unsigned char*;
 using std::size_t;
 
 DH_protocol::DH_protocol() 
@@ -98,7 +97,7 @@ ErrorType DH_protocol::gen_secret(EVP_PKEY* peer){
             std::cerr << "DH can't get secerr len\n";
             return KeygenError;
         }
-        secret = (uchar_p)OPENSSL_malloc(len);
+        secret = (unsigned char*)OPENSSL_malloc(len);
         if(!secret){
             std::cout << "OSSL malloc failed\n";
             return OSSLError;
@@ -119,10 +118,10 @@ ErrorType DH_protocol::gen_secret(EVP_PKEY* peer){
 std::expected<AES_GCM, ErrorType> DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, char* aad){
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
-    uchar_p derived_key = nullptr;
+    unsigned char* derived_key = nullptr;
 
     auto err = [&]() -> ErrorType{
-        derived_key = (uchar_p)OPENSSL_malloc(AES_GCM::KEYLEN);
+        derived_key = (unsigned char*)OPENSSL_malloc(AES_GCM::KEYLEN);
         if(!derived_key){
             std::cerr << "OPENSSL_malloc failed (gen_aes)\n";
             return OSSLError;

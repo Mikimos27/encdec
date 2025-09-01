@@ -27,4 +27,4 @@ mem.elf: rsa.o aes.o crypt.o
 .PHONY: clean
 
 clean:
-	rm *.o ./*/*.gch
+	rm *.o

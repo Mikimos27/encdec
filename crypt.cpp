@@ -23,13 +23,12 @@ void print_hex(const char* name, const uchar* str, size_t len){
 }
 
 int test_aes(int argc, char** argv){
-    if(argc > 1){
-        std::cerr << "Too many args\n";
+    if(argc < 2){
+        std::cerr << "Usage: " << argv[0] << " <plaintext>\n";
         return 1;
     }
 
-    std::string input;
-    std::getline(std::cin, input);
+    std::string input(argv[1]);
     int len = (int)input.length();
     uchar* in = new uchar[len]{0};
     uchar* cipher = new uchar[len]{0};
@@ -51,10 +50,11 @@ int test_aes(int argc, char** argv){
 
     aes.decrypt(cipher, out, len);
     
-    std::cout << "Decrypted: "; std::printf("\n");
+    std::cout << "Decrypted: ";
     for(int i = 0; i < len; i++){
         std::printf("%c", (char)out[i]);
     }
+    printf("\nlen = %d\n", len);
     std::printf("\n");
 
 
@@ -66,38 +66,49 @@ int test_aes(int argc, char** argv){
 
 
 int test_rsa(int argc, char** argv){
+    int keysize = 1024;
+    if(argc < 2){
+        std::cout << "No key size given\nUsing default: 4096\n";
+    }
+    else {
+        try{
+            keysize = std::stoi(argv[1]);
+        }catch(...){
+            std::cerr << "NAN given\n";
+            return 1;
+        }
+    }
     RSA_keys rsa;
-//    int keysize = 4096;
-//    if(argc < 2){
-//        std::cout << "No key size given\nUsing default: 4096\n";
-//    }
-//    else {
-//        try{
-//            keysize = std::stoi(argv[1]);
-//        }catch(...){
-//            std::cerr << "NAN given\n";
-//            return 1;
-//        }
-//    }
-//    RSA_keys rsa;
-//    if(rsa.gen_key_pair(keysize) < 0){
-//        std::cerr << "Keys can't be generated\n";
-//        return 1;
-//    }
-    rsa.gen_key_pair(1024);
-    char p[2] = "a";
+    if(rsa.gen_key_pair(keysize) < 0){
+        std::cerr << "Keys can't be generated\n";
+        return 1;
+    }
+    if(rsa.gen_key_pair(keysize) < 0){
+        std::cerr << "Keys can't be generated\n";
+        return 1;
+    }
     rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", p);
+    rsa.write_prvPEM("prv.pem", NULL);
     rsa.load_pubPEM("pub.pem");
     try {
-        rsa.load_prvPEM("prv.pem", NULL);
+       rsa.load_prvPEM("prv.pem", NULL);
     } catch(std::exception& E){
         std::cerr << "Error caught!\n";
         std::cerr << E.what() << '\n';
         return 1;
     }
+    char p1[2] = "a";
+    char p2[2] = "a";
     rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", p);
+    rsa.write_prvPEM("prv.pem", p1);
+    rsa.load_pubPEM("pub.pem");
+    try {
+       rsa.load_prvPEM("prv.pem", p2);
+    } catch(std::exception& E){
+        std::cerr << "Error caught!\n";
+        std::cerr << E.what() << '\n';
+        return 1;
+    }
 
     const char* msg = "Halo halo halo kurna";
     if(argc < 2){
@@ -110,32 +121,32 @@ int test_rsa(int argc, char** argv){
         std::cout << E.what() << '\n';
         return 1;
     }
-
     int size = rsa.get_out_size();
     unsigned char* enc = new unsigned char[size];
+    std::memcpy(enc, rsa.get_out_buff(), size);//UNINIT VALUE
+    print_hex("encrypted string", rsa.get_out_buff(), size);
+    print_hex("encrypted string", enc, size);
+    std::printf("HERE\n");
 
-    std::memcpy(enc, rsa.get_out_buff(), rsa.get_out_size());
-    enc[rsa.get_out_size()] = 0;
 
     rsa.decrypt(enc);
 
-    std::printf("%d\n", size);
     unsigned char* get = new unsigned char[rsa.get_out_size() + 1];
+    printf("outsize = %ld", rsa.get_out_size());
     std::memcpy(get, rsa.get_out_buff(), rsa.get_out_size());
     get[rsa.get_out_size()] = 0;
     
 
 
 
-    print_hex("encrypted string", enc, size);
     std::printf("Decrypted string = ");
-    //std::fwrite(get, 1, rsa.get_out_size(), stdout);
+    std::fwrite(get, 1, rsa.get_out_size(), stdout);
     std::cout << get << "\nout_size = " << rsa.get_out_size() << '\n';
 
+    delete[] get;
+    delete[] enc;
 
     ERR_print_errors_fp(stderr);
-    delete[] enc;
-    delete[] get;
     return 0;
 }
 
@@ -143,7 +154,13 @@ int test_sig(int argc, char** argv){
     RSA_keys rsa;
     rsa.gen_key_pair(1024);
     rsa.load_pubPEM("pub.pem");
-    rsa.load_prvPEM("prv.pem", NULL);
+    char p1[2] = "a";
+    try{
+        rsa.load_prvPEM("prv.pem", p1);
+    }catch(...){
+        std::cerr << "Can't open prv.pem\n";
+        return 1;
+    }
 
 
     const char* msg = "Halo halo halo kurna";
@@ -166,5 +183,5 @@ int test_sig(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_sig(argc, argv);
+    return test_aes(argc, argv);
 }

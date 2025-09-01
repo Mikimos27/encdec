@@ -31,7 +31,8 @@ void DH_protocol::gen_key(){
     EVP_PKEY_free(keypair);
     keypair = nullptr;
     do{
-        pctx = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);
+        kctx = EVP_PKEY_CTX_new_from_name(NULL, "X25519", NULL);
+        /*
         if(!pctx || !EVP_PKEY_paramgen_init(pctx)){
             std::cerr << "DH can't init gen params\n";
             break;
@@ -51,6 +52,7 @@ void DH_protocol::gen_key(){
         }
 
         kctx = EVP_PKEY_CTX_new(params, NULL);
+        */
         if(!kctx || !EVP_PKEY_keygen_init(kctx)){
             std::cerr << "DH can't init keygen\n";
             break;
@@ -171,7 +173,7 @@ int DH_protocol::extract_pub(EVP_PKEY** pub){
         }
 
         // Import only the public components into a new EVP_PKEY
-        ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "DH", NULL);  // or EC, etc.
+        ctx_import = EVP_PKEY_CTX_new_from_name(NULL, "X25519", NULL);  // or EC, etc.
         if (!ctx_import){
             std::cerr << "Ctx failed\n";
             break;

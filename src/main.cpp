@@ -1,6 +1,7 @@
 #include "../hdr/aes.h"
 #include "../hdr/dh.h"
 #include "../hdr/ed25519.h"
+#include "../hdr/sha256.h"
 extern "C"{
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -165,7 +166,9 @@ int test_dh(int argc, char** argv){
     print_hex("tag1", k1.get_tag(), AES_GCM::TAGLEN);
     print_hex("tag2", k2.get_tag(), AES_GCM::TAGLEN);
     print_hex("iv1", k1.get_iv(), AES_GCM::IVLEN);
-    print_hex("iv2", k2.get_iv(), AES_GCM::IVLEN);
+    print_hex("iv1", k2.get_iv(), AES_GCM::IVLEN);
+    printf("aad1 = %s\n", k1.get_aad());
+    printf("aad2 = %s\n", k2.get_aad());
     
     uchar in[] = "Secret";
     uchar c1[7] = {0};
@@ -173,8 +176,8 @@ int test_dh(int argc, char** argv){
     uchar o1[7] = {0};
     uchar o2[7] = {0};
 
-    k1.encrypt(in, c1, 6);
-    k2.encrypt(in, c2, 6);
+    if(k1.encrypt(in, c1, 6)) std::cerr << "DH enc F\n";
+    if(k2.encrypt(in, c2, 6)) std::cerr << "DH enc F\n";
     print_hex("tag1", k1.get_tag(), AES_GCM::TAGLEN);
     print_hex("tag2", k2.get_tag(), AES_GCM::TAGLEN);
     k1.decrypt(c1, o1, 6);
@@ -200,7 +203,14 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    //test_aes(argc, argv);
-    //test_sig(argc, argv);
-    return test_dh(argc, argv);
+    unsigned char* msg = (unsigned char*)argv[1];
+    int msglen = std::strlen((char*)msg);
+    auto out = *calc_sha256(msg, msglen);
+    unsigned char raw[32];
+    for(size_t i = 0; i < 32; i++) raw[i] = out[i];
+    print_hex("sha256", raw, 32);
+
+    return test_aes(argc, argv);
+//    return test_sig(argc, argv);
+//    return test_dh(argc, argv);
 }

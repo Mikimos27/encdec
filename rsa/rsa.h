@@ -25,11 +25,11 @@ public:
     void write_prvDER(const char* filepath, const char* passwd);
     void write_prv_to(std::FILE* const fp, const char* const passwd);
 
-    void set_key_prv(EVP_PKEY** keys);
+    void set_key_prv(EVP_PKEY** keys); //Takes ownership
     const EVP_PKEY* const get_key_prv();
 
     void set_key_pub(EVP_PKEY** keys);
-    const EVP_PKEY* const get_key_pub();
+    const EVP_PKEY* const get_key_pub(); //Takes ownership
 
     int gen_key_pair(int keysize);
     

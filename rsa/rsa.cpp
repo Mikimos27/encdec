@@ -136,11 +136,11 @@ void RSA_keys::_clear_buff(){
 }
 
 void RSA_keys::_free_key(EVP_PKEY** pkey){
-    static int free_count = 0;
+    //static int free_count = 0;
     if(*pkey){
         EVP_PKEY_free(*pkey);
         *pkey = nullptr;
-        free_count++;
-        std::cout << free_count << '\n';
+        //free_count++;
+        //std::cout << free_count << '\n';
     }
 }

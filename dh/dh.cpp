@@ -104,7 +104,7 @@ int DH_protocol::gen_secret(EVP_PKEY* peer){
     return failed;
 }
 
-AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen){
+std::expected<AES_GCM, const char*> DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, char* aad){
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
     uchar_p derived_key = nullptr;
@@ -140,9 +140,9 @@ AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen){
     }while(0);
     EVP_KDF_free(kdf);
     EVP_KDF_CTX_free(ctx);
-    if(failed) return AES_GCM{};
+    if(failed) return std::unexpected("AES HKDF failed error\n");
 
-    AES_GCM ret(derived_key, "generated");
+    AES_GCM ret(derived_key, aad);
 
     OPENSSL_cleanse(derived_key, AES_GCM::KEYLEN);
     OPENSSL_free(derived_key);

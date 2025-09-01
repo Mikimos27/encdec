@@ -7,6 +7,8 @@
 #include <cstddef>
 #include "../aes/aes.h"
 
+#include <expected>
+
 class DH_protocol{
 public:
 
@@ -15,7 +17,7 @@ public:
 
     void gen_key();
     int gen_secret(EVP_PKEY* peer);
-    AES_GCM gen_aes(const unsigned char* salt, size_t saltlen);
+    std::expected<AES_GCM, const char*> gen_aes(const unsigned char* salt, size_t saltlen, char* aad);
     int extract_pub(EVP_PKEY** pub);
 
 private:

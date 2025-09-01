@@ -12,8 +12,6 @@ public:
     static constexpr std::size_t IVLEN = 12;
 
 
-    AES_GCM();
-
     AES_GCM(unsigned char* key, const char* aad);
     AES_GCM(const char* aad);
     AES_GCM(const AES_GCM& other);
@@ -41,7 +39,6 @@ private:
     unsigned char iv[IVLEN];
     unsigned char tag[TAGLEN];
     char* aad;
-    bool valid = true;
 };
 
 #endif

@@ -11,13 +11,13 @@ void print_hex(const char* name, const unsigned char* str, size_t len){
     for(size_t i = 0; i < len; i++){
         std::printf("%02x", str[i]);
     }
-    std::printf("\nlen = %ld\n", len);
+    std::printf("\n");
 }
 
 
 int main(){
     constexpr int length = 20;
-    AES_GCM_256_key aes("ExampleAAD");
+    AES_256_GCM_key aes("ExampleAAD");
     char from[length] = {0};
     unsigned char in[length] = {0};
     std::fgets(from, length, stdin);
@@ -28,9 +28,9 @@ int main(){
     aes.encrypt(in, out, length);
 
     print_hex("ciphertext", out, length);
-    print_hex("tag", aes.get_tag(), aes.get_taglen());
-    print_hex("iv", aes.get_iv(), aes.get_ivlen());
-    print_hex("key", aes.get_key(), aes.get_keylen());
+    print_hex("tag", aes.get_tag(), AES_256_GCM_key::get_taglen());
+    print_hex("iv", aes.get_iv(), AES_256_GCM_key::get_ivlen());
+    print_hex("key", aes.get_key(), AES_256_GCM_key::get_keylen());
 
     return 0;
 }

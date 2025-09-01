@@ -22,6 +22,10 @@ void print_hex(const char* name, const uchar* str, size_t len){
     std::printf("\n");
 }
 
+void setutu(const  uchar* const src, uchar* dst, int size){
+    for(int i = 0; i < size; i++) dst[i] = src[i];
+}
+
 /*
 int main(int argc, char** argv){
     if(argc > 1){
@@ -88,22 +92,32 @@ int main(int argc, char** argv){
     rsa.write_prvPEM("prv.pem", "e");
 
 
-    char msg[] = "Habla habla habla"; 
-    rsa.encrypt((unsigned char*)msg, sizeof(msg));
+    const char* msg = "Halo halo halo kurna";
+    if(argc < 3){
+        std::cerr << "No message given or message too long\nUsing defaults\n";
+    }
+    else msg = argv[2];
+    rsa.encrypt((const unsigned char*)msg, std::strlen(msg));
 
     int size = rsa.get_out_size();
     unsigned char* enc = new unsigned char[size];
-    std::strcpy((char*)enc, (char*)rsa.get_out_buff());
-    //rsa.decrypt(enc);
+    setutu(rsa.get_out_buff(), enc, size);
+    rsa.decrypt(enc);
 
     std::printf("%d\n", size);
+    unsigned char* get = new unsigned char[rsa.get_out_size()];
+    setutu(rsa.get_out_buff(), get, rsa.get_out_size());
 
 
 
-    //print_hex("encrypted string", enc, size);
+    print_hex("encrypted string", enc, size);
+    std::printf("Decrypted string = ");
+    std::fwrite(get, 1, rsa.get_out_size(), stdout);
+    std::cout << '\n';
 
 
-    //ERR_print_errors_fp(stderr);
+    ERR_print_errors_fp(stderr);
     delete[] enc;
+    delete[] get;
     return 0;
 }

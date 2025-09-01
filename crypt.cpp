@@ -1,9 +1,9 @@
 #include "aes/aes_256_gcm.h"
+#include "rsa/rsa_pss.h"
 #include <iostream>
 #include <cstdio>
 #include <cstddef>
 #include <string>
-#include <openssl/rand.h>
 
 using std::size_t;
 using uchar = unsigned char;
@@ -16,7 +16,7 @@ void print_hex(const char* name, const uchar* str, size_t len){
     std::printf("\n");
 }
 
-
+/*
 int main(int argc, char** argv){
     if(argc > 1){
         std::cerr << "Too many args\n";
@@ -56,5 +56,14 @@ int main(int argc, char** argv){
     delete[] in;
     delete[] cipher;
     delete[] out;
+    return 0;
+}*/
+
+
+int main(){
+    RSA_PSS_keys rsa;
+    rsa.gen_key_pair(4092);
+    rsa.write_pubPEM("pub.pem", NULL);
+
     return 0;
 }

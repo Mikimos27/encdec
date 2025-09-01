@@ -1,4 +1,3 @@
-#include "aes_256_gcm.h"
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
@@ -10,6 +9,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include "aes_256_gcm.h"
 
 
 using uchar = unsigned char;
@@ -105,7 +105,7 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
             break;
         }
         if(!EVP_DecryptFinal_ex(ctx, plaintext + outlen, &tmplen)){
-            std::perror("Decryption failed: tag mismatch or tampering\n");
+            std::perror("Decryption failed: tag mismatch, tampering or bad decryption key\n");
             break;
         }
     }while(0);
@@ -126,3 +126,14 @@ const unsigned char* AES_256_GCM_key::get_iv(){
 }
 
 
+void AES_256_GCM_key::set_key(unsigned char (&arr)[KEYLEN]){
+    for(std::size_t i = 0; i < KEYLEN; i++){
+        key[i] = arr[i];
+    }
+}
+
+void AES_256_GCM_key::set_iv(unsigned char (&arr)[IVLEN]){
+    for(std::size_t i = 0; i < KEYLEN; i++){
+        iv[i] = arr[i];
+    }
+}

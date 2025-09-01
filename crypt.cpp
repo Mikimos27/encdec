@@ -1,9 +1,10 @@
 #include "aes/aes_256_gcm.h"
-#include "rsa/rsa_pss.h"
+#include "rsa/rsa.h"
 #include <iostream>
 #include <cstdio>
 #include <cstddef>
 #include <string>
+#define OPENSSL_API_COMPAT 0x30500010
 
 using std::size_t;
 using uchar = unsigned char;
@@ -61,8 +62,8 @@ int main(int argc, char** argv){
 
 
 int main(){
-    RSA_PSS_keys rsa;
-    rsa.gen_key_pair(4092);
+    RSA_keys rsa;
+    rsa.gen_key_pair(8192);
     rsa.write_pubPEM("pub.pem");
     rsa.write_prvPEM("prv.pem", NULL);
 

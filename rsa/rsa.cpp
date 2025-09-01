@@ -1,4 +1,4 @@
-#include "rsa_pss.h"
+#include "rsa.h"
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
@@ -11,31 +11,32 @@
 #include <iostream>
 
 
-RSA_PSS_keys::RSA_PSS_keys(){
+RSA_keys::RSA_keys(){
     prv = EVP_PKEY_new();
     pub = EVP_PKEY_new();
+    keysize = 0;
 }
-RSA_PSS_keys::~RSA_PSS_keys(){
+RSA_keys::~RSA_keys(){
     if(prv != NULL) EVP_PKEY_free(prv);
     if(pub != NULL) EVP_PKEY_free(pub);
 }
 
 
-#include "rsa_256_pss_PUBMAN.cpp"
-#include "rsa_256_pss_PRVMAN.cpp"
+#include "rsa_PUBMAN.cpp"
+#include "rsa_PRVMAN.cpp"
 
 
 
 
-void RSA_PSS_keys::set_key(EVP_PKEY** keys){
-
-}
-void RSA_PSS_keys::get_key(EVP_PKEY** keys){
+void RSA_keys::set_key(EVP_PKEY** keys){
 
 }
+void RSA_keys::get_key(EVP_PKEY** keys){
+
+}
 
 
-void RSA_PSS_keys::gen_key_pair(int keysize){
+void RSA_keys::gen_key_pair(int keysize){
     if(keysize % 8){
         ///////////////////////////////////////////////////////////////
     }
@@ -43,7 +44,7 @@ void RSA_PSS_keys::gen_key_pair(int keysize){
     EVP_PKEY* pkey = nullptr;
     unsigned int primes = 2;
 
-    ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA-PSS", NULL);//change to FIPS
+    ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);//change to FIPS
     do{
 
         if(!ctx){
@@ -78,6 +79,7 @@ void RSA_PSS_keys::gen_key_pair(int keysize){
     pkey = nullptr;
 
     pub = _extract_pub(prv);
+    this->keysize = keysize;
 }
 
 

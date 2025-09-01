@@ -202,6 +202,7 @@ ErrorType AES_GCM::set_iv(const unsigned char (&arr)[IVLEN]){
         if(bad && arr[i] != 0) bad = false;
         iv[i] = arr[i];
     }
+    sameIV = false;
     return bad ? BadInput : None;
 }
 
@@ -212,7 +213,7 @@ ErrorType AES_GCM::set_aad(const char* arr){
     delete[] aad;
     aad = (char*)OPENSSL_malloc(newlen + 1);
 
-    if(aad) return OSSLError;
+    if(!aad) return OSSLError;
 
     for(size_t i = 0; i < newlen; i++){
         aad[i] = arr[i];

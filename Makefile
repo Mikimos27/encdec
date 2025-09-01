@@ -15,7 +15,7 @@ test: $(BIN)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BIN): $(OBJ) tests/test.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -fsanitize=address -fsanitize=bounds
 
 
 

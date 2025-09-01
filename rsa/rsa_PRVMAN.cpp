@@ -7,6 +7,8 @@ void RSA_keys::load_prvPEM(const char* filepath, const char* passwd){
     }
 
     if(passwd){
+        EVP_PKEY_free(this->prv);
+        this->prv = EVP_PKEY_new();
         if(!PEM_read_PrivateKey_ex(fp, &this->prv, NULL, (unsigned char*)passwd, NULL, NULL)) throw std::invalid_argument("Bad decryption passphrase");
         OPENSSL_cleanse((void*)passwd, std::strlen(passwd));
     }
@@ -41,6 +43,11 @@ void RSA_keys::load_prvDER(const char* filepath, const char* passwd){
     fp = std::fopen(filepath, "r");
     if(fp == NULL){
         throw std::invalid_argument("Can't open file");
+    }
+    if(passwd){
+        EVP_PKEY_free(this->prv);
+        this->prv = EVP_PKEY_new();
+
     }
 
 }

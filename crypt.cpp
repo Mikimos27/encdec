@@ -2,6 +2,7 @@
 #include "rsa/rsa.h"
 extern "C"{
 #include <openssl/pem.h>
+#include <openssl/err.h>
 }
 #include <iostream>
 #include <cstdio>
@@ -83,14 +84,18 @@ int main(int argc, char** argv){
         return 1;
     }
     rsa.write_pubPEM("pub.pem");
-    rsa.write_prvPEM("prv.pem", NULL);
+    rsa.write_prvPEM("prv.pem", "e");
 
     RSA_keys from_file;
-    from_file.load_prvPEM("prv.pem", NULL);
-    //PEM_write_PrivateKey(stdout, from_file.get_key_prv(), NULL, NULL, 0, NULL, NULL);
-    //PEM_write_PUBKEY(stdout, from_file.get_key_pub());
-    from_file.write_prv_to(stdout, NULL);
-    from_file.write_pub_to(stdout);
+    from_file.load_prvPEM("prv.pem", "e");
+    char msg[] = "Habla habla habla"; 
+    rsa.encrypt((unsigned char*)msg, sizeof(msg));
+    ERR_print_errors_fp(stderr);
+
+    std::cout << "out_size = " << rsa.get_out_size() << '\n';
+
+    print_hex("encrypted string", rsa.get_out_buff(), rsa.get_out_size());
+
 
     return 0;
 }

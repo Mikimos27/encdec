@@ -18,7 +18,8 @@ extern "C"{
 
 using uchar = unsigned char;
 
-AES_GCM::AES_GCM(const uchar* key, const char* aad){
+AES_GCM::AES_GCM(const uchar* key, const char* aad)
+: tag{0}{
     memcpy(this->key, key, AES_GCM::KEYLEN);
 
 
@@ -209,9 +210,8 @@ ErrorType AES_GCM::set_iv(const unsigned char (&arr)[IVLEN]){
 ErrorType AES_GCM::set_aad(const char* arr){
     size_t newlen = std::strlen(arr);
     if(newlen <= 0) return BadInput;
-    OPENSSL_cleanse((void*)this->key, AES_GCM::KEYLEN);
     delete[] aad;
-    aad = (char*)OPENSSL_malloc(newlen + 1);
+    aad = new char[newlen + 1];
 
     if(!aad) return OSSLError;
 

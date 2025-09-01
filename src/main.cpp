@@ -72,8 +72,11 @@ int test_aes(int argc, char** argv){
 
 
 int test_sig(int argc, char** argv){
+    Ed25519 uno;
+    uno.gen_key_pair();
     Ed25519 edcs;
-    edcs.gen_key_pair(256);
+    edcs.set_key_pub(uno.get_key_pub());
+    edcs.set_key_prv(uno.get_key_prv());
 
     if(edcs.write_pubPEM("pub.pem")) std::cerr << "write to pub.pem F\n";
     if(edcs.write_prvPEM("prv.pem", NULL)) std::cerr << "write to prv.pem F\n";
@@ -153,11 +156,41 @@ int test_dh(int argc, char** argv){
 
     if(k1.set_iv(iv)) std::cerr << "DH set iv F\n";
     if(k2.set_iv(iv)) std::cerr << "DH set iv F\n";
+    if(k1.set_aad(aad)) std::cerr << "DH set iv F\n";
+    if(k2.set_aad(aad)) std::cerr << "DH set iv F\n";
 
-    //share aad
 
     print_hex("k1", k1.get_key(), AES_GCM::KEYLEN);
     print_hex("k2", k2.get_key(), AES_GCM::KEYLEN);
+    print_hex("tag1", k1.get_tag(), AES_GCM::TAGLEN);
+    print_hex("tag2", k2.get_tag(), AES_GCM::TAGLEN);
+    print_hex("iv1", k1.get_iv(), AES_GCM::IVLEN);
+    print_hex("iv2", k2.get_iv(), AES_GCM::IVLEN);
+    
+    uchar in[] = "Secret";
+    uchar c1[7] = {0};
+    uchar c2[7] = {0};
+    uchar o1[7] = {0};
+    uchar o2[7] = {0};
+
+    k1.encrypt(in, c1, 6);
+    k2.encrypt(in, c2, 6);
+    print_hex("tag1", k1.get_tag(), AES_GCM::TAGLEN);
+    print_hex("tag2", k2.get_tag(), AES_GCM::TAGLEN);
+    k1.decrypt(c1, o1, 6);
+    k2.decrypt(c2, o2, 6);
+
+    print_hex("k1 enc", c1, 6);
+    print_hex("k2 enc", c2, 6);
+    std::cout << "Decrypted1: ";
+    for(int i = 0; i < 6; i++){
+        std::printf("%c", (char)o1[i]);
+    }
+    std::cout << "\nDecrypted2: ";
+    for(int i = 0; i < 6; i++){
+        std::printf("%c", (char)o2[i]);
+    }
+    std::cout << "\n\n";
 
     EVP_PKEY_free(pub1);
     EVP_PKEY_free(pub2);
@@ -167,7 +200,7 @@ int test_dh(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    test_aes(argc, argv);
-    test_sig(argc, argv);
+    //test_aes(argc, argv);
+    //test_sig(argc, argv);
     return test_dh(argc, argv);
 }

@@ -16,14 +16,12 @@ extern "C"{
 Ed25519::Ed25519(){
     this->prv = nullptr;
     this->pub = nullptr;
-    keysize = 0;
     out_buff = nullptr;
     out_size = 0;
 }
 Ed25519::~Ed25519(){
     if(prv != nullptr) _free_key(&prv);
     if(pub != nullptr) _free_key(&pub);
-    keysize = 0;
     _clear_buff();
     ERR_print_errors_fp(stderr);
 }
@@ -36,8 +34,6 @@ ErrorType Ed25519::set_key_prv(EVP_PKEY* keys){
     prv = newkey;
     newkey = nullptr;
 
-    keysize = EVP_PKEY_get_bits(prv);
-
     _clear_buff();
     if(_extract_pub(prv, &pub)) {
         std::cerr << "Ed25519::set_key_prv _extract_pub error\n";
@@ -45,7 +41,7 @@ ErrorType Ed25519::set_key_prv(EVP_PKEY* keys){
     }
     return None;
 }
-const EVP_PKEY* const Ed25519::get_key_prv(){
+EVP_PKEY* Ed25519::get_key_prv(){
     return prv;
 }
 
@@ -62,16 +58,11 @@ ErrorType Ed25519::set_key_pub(EVP_PKEY* keys){
 
     return None;
 }
-const EVP_PKEY* const Ed25519::get_key_pub(){
+EVP_PKEY* Ed25519::get_key_pub(){
     return pub;
 }
 
-ErrorType Ed25519::gen_key_pair(int keysize){
-    //if(keysize < 1024) throw std::logic_error("Key must be at least 1024 bits long, ideally equal or larger than 2048 bits");
-    if(keysize % 8){
-        std::cerr << "Key size not divisible by 8\n";
-        return BadInput;
-    }
+ErrorType Ed25519::gen_key_pair(){
     _clear_buff();
     EVP_PKEY_CTX* ctx = nullptr;
     EVP_PKEY* pkey = nullptr;
@@ -117,7 +108,6 @@ ErrorType Ed25519::gen_key_pair(int keysize){
 
     if(_extract_pub(prv, &pub)) throw std::invalid_argument("Can't extract pub key\n");
     if(!pub) throw std::invalid_argument("BAD in genkey\n");
-    this->keysize = keysize;
 
     return err;
 }
@@ -202,7 +192,7 @@ const std::size_t Ed25519::get_out_size(){
     return this->out_size;
 }
 const std::size_t Ed25519::get_ciph_size(){
-    return this->pub == nullptr ? 0 : EVP_PKEY_get_size(this->pub);
+    return this->pub == nullptr ? 0 : EVP_PKEY_get_size(this->pub);//constexpr to 64??????
 }
 
 void Ed25519::_clear_buff(){
@@ -248,7 +238,6 @@ ErrorType Ed25519::load_prvPEM(const char* filepath, char* passwd){
 
 
     std::fclose(fp);
-    //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     if(_extract_pub(this->prv, &this->pub)) {
         std::cerr << "Ed25519::load_prvPEM _extract_pub error\n";
         return ExtractionError;
@@ -291,13 +280,12 @@ ErrorType Ed25519::load_prvDER(const char* filepath, char* passwd){
     return FileError;
     std::FILE* fp = nullptr;
     fp = std::fopen(filepath, "r");
-    if(fp == NULL){
+    if(!fp){
         throw std::invalid_argument("Can't open file");
     }
     if(passwd){
         EVP_PKEY_free(this->prv);
         this->prv = EVP_PKEY_new();
-
     }
 
 }
@@ -320,7 +308,6 @@ ErrorType Ed25519::write_prv_to(std::FILE* const fp, char* passwd){
     if(passwd){
         cipher = EVP_CIPHER_fetch(NULL, "AES-256-CBC", NULL);
         if(!cipher) {
-            EVP_CIPHER_free(cipher);
             return OSSLError;
         }
         if(!PEM_write_PrivateKey_ex(fp, this->prv, cipher, (unsigned char*)passwd, std::strlen(passwd), NULL, NULL, NULL, NULL)) {

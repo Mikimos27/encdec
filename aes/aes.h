@@ -20,6 +20,7 @@ public:
     AES_GCM(AES_GCM&& other);
     ~AES_GCM();
 
+    void gen_key();
     void genIV();
 
     void encrypt(const unsigned char* plaintext, unsigned char* ciphertext, int length);
@@ -40,6 +41,7 @@ private:
     unsigned char iv[IVLEN];
     unsigned char tag[TAGLEN];
     char* aad;
+    bool valid = true;
 };
 
 #endif

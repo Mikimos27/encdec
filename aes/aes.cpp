@@ -17,7 +17,7 @@ extern "C"{
 
 using uchar = unsigned char;
 
-AES_GCM::AES_GCM() : key{0}, iv{0}, tag{0}, aad{0} {}
+AES_GCM::AES_GCM() : key{0}, iv{0}, tag{0}, aad{0}, valid(false){}
 AES_GCM::AES_GCM(uchar* key, const char* aad){
     memcpy(this->key, key, AES_GCM::KEYLEN);
 
@@ -60,16 +60,20 @@ AES_GCM::~AES_GCM(){
     ERR_print_errors_fp(stderr);
 }
 
+void AES_GCM::gen_key(){
+    RAND_bytes(key, sizeof(key));
+    valid = true;
+}
 void AES_GCM::genIV(){
     RAND_bytes(iv, sizeof(iv));
 }
 
 void AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
+    if(!valid) return;
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
     int tmplen = 0;
-    genIV();
 
 
     ctx = EVP_CIPHER_CTX_new();
@@ -113,11 +117,13 @@ void AES_GCM::encrypt(const uchar* plaintext, uchar* ciphertext, int length){
             std::cerr << "Tag extraction on encryption failed\n";
         }
     }while(0);
+    genIV();
 
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
 }
 void AES_GCM::decrypt(const uchar* ciphertext, uchar* plaintext, int length){
+    if(!valid) return;
     EVP_CIPHER_CTX* ctx = nullptr;
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;

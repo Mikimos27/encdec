@@ -218,8 +218,8 @@ int hash_test(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-//    return hash_test(argc, argv);
-//    return test_aes(argc, argv);
-//    return test_sig(argc, argv);
+    hash_test(argc, argv);
+    test_aes(argc, argv);
+    test_sig(argc, argv);
     return test_dh(argc, argv);
 }

@@ -1,5 +1,4 @@
-mem
-crypto
+test
 *.pem
 *.der
 *.gch

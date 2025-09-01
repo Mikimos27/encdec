@@ -4,6 +4,8 @@
 
 #include <cstddef>
 
+
+
 enum ErrorType{
     None = 0,
     PemError,
@@ -22,12 +24,5 @@ enum ErrorType{
     OSSLError
 };
 
-template<typename T>
-bool is_zero(T* array, std::size_t size){
-    for(std::size_t i = 0; i < size; i++){
-        if(array[i] != 0) return false;
-    }
-    return true;
-}
 
 #endif

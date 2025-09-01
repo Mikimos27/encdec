@@ -21,12 +21,19 @@ void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
             std::cerr << "Can't generate ctx for encryption\n";
             break;
         }
+        if(!EVP_PKEY_encrypt_init(ctx)){
+            std::cerr << "Encrypt init failed\n";
+            ERR_print_errors_fp(stderr);
+            break;
+        }
+
+
         md = EVP_MD_fetch(NULL, "SHA256", NULL);
         if(!md){
             std::cerr << "SHA256 fetch fail\n";
             break;
         }
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
         if(!EVP_PKEY_CTX_set_rsa_oaep_md(ctx, md)){
             std::cerr << "OAEP hash set fail\n";
             break;
@@ -35,19 +42,13 @@ void RSA_keys::encrypt(const unsigned char* plaintext, int msgsize){
             std::cerr << "MGF1 hash set fail\n";
             break;
         }
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-        if(!EVP_PKEY_encrypt_init(ctx)){
-            std::cerr << "Encrypt init failed\n";
-            ERR_print_errors_fp(stderr);
-            break;
-        }
         if (!EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING)){
             std::cerr << "Encryption padding set fail\n";
             break;
         }
+
+
+
         if(!EVP_PKEY_encrypt(ctx, NULL, &clen, plaintext, msgsize)){
             std::cerr << "Encryption length check failed\n";
             break;

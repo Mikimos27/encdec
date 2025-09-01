@@ -15,7 +15,7 @@ public:
 
     void gen_key();
     int gen_secret(EVP_PKEY* peer);
-    AES_GCM gen_aes(const unsigned char* salt, size_t saltlen, size_t key_len);
+    AES_GCM gen_aes(const unsigned char* salt, size_t saltlen);
     int extract_pub(EVP_PKEY** pub);
 
 private:

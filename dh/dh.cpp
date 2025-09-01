@@ -5,8 +5,11 @@ extern "C"{
 #include <openssl/params.h>
 #include <openssl/kdf.h>
 #include <openssl/err.h>
+
+#include <openssl/pem.h>
 }
 #include <cstring>
+#include <cstdio>
 #include <iostream>
 
 using uchar_p = unsigned char*;
@@ -85,7 +88,7 @@ int DH_protocol::gen_secret(EVP_PKEY* peer){
             std::cerr << "DH can't get secret len\n";
             break;
         }
-        secret = (uchar_p)OPENSSL_malloc(slen);
+        secret = (uchar_p)OPENSSL_malloc(len);
         if(!secret || !EVP_PKEY_derive(dctx, secret, &len)){
             std::cerr << "DH can't derive secret\n";
             break;
@@ -99,15 +102,14 @@ int DH_protocol::gen_secret(EVP_PKEY* peer){
     return failed;
 }
 
-AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, size_t key_len){
-    if(key_len != 256) return AES_GCM{};
+AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen){
     EVP_KDF* kdf = nullptr;
     EVP_KDF_CTX* ctx = nullptr;
     uchar_p derived_key = nullptr;
     int failed = 1;
 
     do{
-        derived_key = (uchar_p)OPENSSL_malloc(key_len);
+        derived_key = (uchar_p)OPENSSL_malloc(AES_GCM::KEYLEN);
         if(!derived_key){
             std::cerr << "OPENSSL_malloc failed (gen_aes)\n";
             break;
@@ -127,7 +129,7 @@ AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, size_t k
             OSSL_PARAM_construct_octet_string("info", (void*)info, std::strlen(info)),
             OSSL_PARAM_construct_end()
         };
-        if(!EVP_KDF_derive(ctx, derived_key, key_len, params)){
+        if(!EVP_KDF_derive(ctx, derived_key, AES_GCM::KEYLEN, params)){
             std::cerr << "Can't HKDF derive aes key\n";
             break;
         }
@@ -137,10 +139,10 @@ AES_GCM DH_protocol::gen_aes(const unsigned char* salt, size_t saltlen, size_t k
     EVP_KDF_free(kdf);
     EVP_KDF_CTX_free(ctx);
     if(failed) return AES_GCM{};
-    
+
     AES_GCM ret(derived_key, "generated");
 
-    OPENSSL_cleanse(derived_key, key_len);
+    OPENSSL_cleanse(derived_key, AES_GCM::KEYLEN);
     OPENSSL_free(derived_key);
 
     return ret;

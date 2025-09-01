@@ -35,10 +35,10 @@ public:
     int gen_key_pair(int keysize);
     
 
-    void encrypt(const unsigned char* plaintext, int msgsize);
+    void encrypt(const unsigned char* plaintext, int msglen);
     void decrypt(const unsigned char* ciphertext);//Check if ciphertext length is equal to the size of the key!!!!!!
-    void sign(const unsigned char* msg, int msgsize);
-    int verify(const unsigned char* msg, int msgsize, const unsigned char* signature);
+    void sign(const unsigned char* msg, int msglen);
+    int verify(const unsigned char* msg, int msglen, const unsigned char* signature, int siglen);
 
     const unsigned char* const get_out_buff();
     const std::size_t get_out_size();

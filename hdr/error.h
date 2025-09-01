@@ -7,13 +7,16 @@ enum ErrorType{
     FileError,
     NoPrivate,
     NoPublic,
-    CantExtract,
+    ExtractionError,
     SameIV,
     EncryptionError,
     DecryptionError,
     BadSig,
-    SigCreationError,
-    KeyDerivationError
+    SiggenError,
+    KeyDerivationError,
+    BadInput,
+    KeygenError,
+    OSSLError
 };
 
 #endif

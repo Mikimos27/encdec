@@ -30,9 +30,11 @@ public:
 
     ErrorType set_key_prv(EVP_PKEY* keys);
     EVP_PKEY* get_key_prv();
+    ErrorType get_raw_prv();
 
     ErrorType set_key_pub(EVP_PKEY* keys);
     EVP_PKEY* get_key_pub();
+    ErrorType get_raw_pub();
 
     ErrorType gen_key_pair();
     

@@ -45,6 +45,21 @@ EVP_PKEY* Ed25519::get_key_prv(){
     return prv;
 }
 
+ErrorType Ed25519::get_raw_prv(){
+    size_t len = 0;
+    if(!EVP_PKEY_get_raw_private_key(this->prv, NULL, &len)) return NoPrivate;
+    unsigned char* buff = (unsigned char*)OPENSSL_malloc(len);
+    if(!buff) return OSSLError;
+
+    if(!EVP_PKEY_get_raw_private_key(this->prv, buff, &len)) return NoPrivate;
+
+    _clear_buff();
+    out_buff = buff;
+    out_size = len;
+
+    return None;
+}
+
 ErrorType Ed25519::set_key_pub(EVP_PKEY* keys){
     auto newkey = EVP_PKEY_dup(keys);
     if(!newkey) return KeygenError;
@@ -61,6 +76,22 @@ ErrorType Ed25519::set_key_pub(EVP_PKEY* keys){
 EVP_PKEY* Ed25519::get_key_pub(){
     return pub;
 }
+
+ErrorType Ed25519::get_raw_pub(){
+    size_t len = 0;
+    if(!EVP_PKEY_get_raw_public_key(this->pub, NULL, &len)) return NoPublic;
+    unsigned char* buff = (unsigned char*)OPENSSL_malloc(len);
+    if(!buff) return OSSLError;
+
+    if(!EVP_PKEY_get_raw_public_key(this->pub, buff, &len)) return NoPublic;
+
+    _clear_buff();
+    out_buff = buff;
+    out_size = len;
+
+    return None;
+}
+
 
 ErrorType Ed25519::gen_key_pair(){
     _clear_buff();

@@ -35,7 +35,8 @@ int test_aes(int argc, char** argv){
     uchar* out = new uchar[len]{0};
 
 
-    AES_256_GCM_key aes("ExampleAAD");
+    AES_GCM aes_1("ExampleAAD");
+    AES_GCM aes = aes_1;
 
     for(int i = 0; i < len; i++){
         in[i] = (uchar)input.at(i);
@@ -43,9 +44,9 @@ int test_aes(int argc, char** argv){
     aes.encrypt(in, cipher, len);
 
     print_hex("ciphertext", cipher, len);
-    print_hex("tag", aes.get_tag(), AES_256_GCM_key::TAGLEN);
-    print_hex("iv", aes.get_iv(), AES_256_GCM_key::IVLEN);
-    print_hex("key", aes.get_key(), AES_256_GCM_key::KEYLEN);
+    print_hex("tag", aes.get_tag(), AES_GCM::TAGLEN);
+    print_hex("iv", aes.get_iv(), AES_GCM::IVLEN);
+    print_hex("key", aes.get_key(), AES_GCM::KEYLEN);
 
 
     aes.decrypt(cipher, out, len);
@@ -186,5 +187,5 @@ int test_sig(int argc, char** argv){
 }
 
 int main(int argc, char** argv){
-    return test_sig(argc, argv);
+    return test_aes(argc, argv);
 }

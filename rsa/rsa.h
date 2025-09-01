@@ -1,3 +1,5 @@
+#define OPENSSL_API_COMPAT 0x30500010
+
 #ifndef RSA_H
 #define RSA_H
 extern "C"{

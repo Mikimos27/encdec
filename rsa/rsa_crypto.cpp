@@ -167,6 +167,10 @@ void RSA_keys::sign(const unsigned char* msg, int msgsize){
             std::cerr << "Sig init failed\n";
             break;
         }
+        if(!EVP_DigestSignUpdate(ctx, (void*)msg, msgsize)){
+            std::cerr << "Sig msg update failed\n";
+            break;
+        }
         if(!EVP_DigestSignFinal(ctx, NULL, &plen)){
             std::cerr << "Sig get size failed\n";
             break;

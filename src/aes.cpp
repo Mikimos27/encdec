@@ -12,7 +12,7 @@ extern "C"{
 
 #include <string>
 #include <iostream>
-#include "aes.h"
+#include "../hdr/aes.h"
 
 
 using uchar = unsigned char;

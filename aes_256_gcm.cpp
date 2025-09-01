@@ -45,12 +45,12 @@ void AES_256_GCM_key::encrypt(const uchar* plaintext, uchar* ciphertext, int len
         if(!ctx || !cipher){
             std::cerr << "Fetch failed\n";
         }
-        int taglen = TAGLEN;
-        int ivlen = IVLEN;
+        std::size_t taglen = TAGLEN;
+        std::size_t ivlen = IVLEN;
         int plen = length;//Vunurable???????????????????????????
         OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
-            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_AEAD_TAGLEN, &taglen),
+            OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
+            OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_TAGLEN, &taglen),
             OSSL_PARAM_END
         };
 
@@ -87,7 +87,7 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
     EVP_CIPHER* cipher = nullptr;
     int outlen = 0;
     int tmplen = 0;
-    int ivlen = IVLEN;
+    std::size_t ivlen = IVLEN;
     ctx = EVP_CIPHER_CTX_new();
     cipher = EVP_CIPHER_fetch(NULL, "AES-256-GCM", NULL);
 
@@ -97,7 +97,7 @@ void AES_256_GCM_key::decrypt(const uchar* ciphertext, uchar* plaintext, int len
             break;
         }
         OSSL_PARAM params[] = {
-            OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
+            OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &ivlen),
             OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, tag, TAGLEN),
             OSSL_PARAM_END
         };
@@ -132,6 +132,10 @@ const unsigned char* AES_256_GCM_key::get_key(){
 }
 const unsigned char* AES_256_GCM_key::get_iv(){
     return iv; 
+}
+
+const unsigned char* AES_256_GCM_key::get_aad(){
+    return aad;
 }
 
 

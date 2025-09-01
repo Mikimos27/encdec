@@ -22,6 +22,7 @@ public:
     const unsigned char* get_tag();
     const unsigned char* get_key();
     const unsigned char* get_iv();
+    const unsigned char* get_aad();
 
     void set_key(unsigned char (&arr)[KEYLEN]);
     void set_iv(unsigned char (&arr)[IVLEN]);

@@ -46,10 +46,10 @@ EVP_PKEY* Ed25519::get_key_prv(){
 }
 
 
-ErrorType Ed25519::set_raw_prv(unsigned char (&keys)[ED25519_SIZE]){
+ErrorType Ed25519::set_raw_prv(unsigned char (&keys)[ED25519_KEY]){
     EVP_PKEY* new_prv = nullptr;
     EVP_PKEY* new_pub = nullptr;
-    new_prv = EVP_PKEY_new_raw_private_key_ex(NULL, "Ed25519", NULL, keys, ED25519_SIZE);
+    new_prv = EVP_PKEY_new_raw_private_key_ex(NULL, "Ed25519", NULL, keys, ED25519_KEY);
     if(!new_prv) return KeygenError;
     if(_extract_pub(new_prv, &new_pub)) return ExtractionError;
 
@@ -98,9 +98,9 @@ EVP_PKEY* Ed25519::get_key_pub(){
 }
 
 
-ErrorType Ed25519::set_raw_pub(unsigned char (&keys)[ED25519_SIZE]){
+ErrorType Ed25519::set_raw_pub(unsigned char (&keys)[ED25519_KEY]){
     EVP_PKEY* new_pub = nullptr;
-    new_pub = EVP_PKEY_new_raw_public_key_ex(NULL, "Ed25519", NULL, keys, ED25519_SIZE);
+    new_pub = EVP_PKEY_new_raw_public_key_ex(NULL, "Ed25519", NULL, keys, ED25519_KEY);
     if(!new_pub) return KeygenError;
 
     _free_key(&this->prv);

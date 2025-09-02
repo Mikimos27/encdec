@@ -11,6 +11,9 @@ extern "C"{
 
 #include "error.h"
 
+#define ED25519_KEY 32
+#define ED25519_SIG 64
+
 class Ed25519{
 public:
     Ed25519();
@@ -30,10 +33,14 @@ public:
 
     ErrorType set_key_prv(EVP_PKEY* keys);
     EVP_PKEY* get_key_prv();
+
+    ErrorType set_raw_prv(unsigned char (&keys)[ED25519_KEY]);
     ErrorType get_raw_prv();
 
     ErrorType set_key_pub(EVP_PKEY* keys);
     EVP_PKEY* get_key_pub();
+
+    ErrorType set_raw_pub(unsigned char (&keys)[ED25519_KEY]);
     ErrorType get_raw_pub();
 
     ErrorType gen_key_pair();

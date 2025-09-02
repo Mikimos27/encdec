@@ -2,6 +2,7 @@
 #include "../hdr/dh.h"
 #include "../hdr/ed25519.h"
 #include "../hdr/sha256.h"
+#include "../hdr/helper.h"
 extern "C"{
 #include <openssl/err.h>
 #include <openssl/rand.h>
@@ -53,6 +54,7 @@ int test_aes(int argc, char** argv){
     print_hex("tag", aes.get_tag(), AES_GCM::TAGLEN);
     print_hex("iv", aes.get_iv(), AES_GCM::IVLEN);
     print_hex("key", aes.get_key(), AES_GCM::KEYLEN);
+    std::cout << "TEST: " << E2s(ExtractionError) << '\n';
 
 
     if(aes.decrypt(cipher, out, len)) std::cerr << "Dec failed\n";
@@ -98,7 +100,14 @@ int test_sig(int argc, char** argv){
         std::cerr << "No message given or message too long\nUsing defaults\n";
     }
     else msg = argv[1];
+    edcs.get_raw_prv();
+    print_hex("raw prv", edcs.get_out_buff(), edcs.get_out_size());
+    printf("outsize = %ld\n", edcs.get_out_size());
+    edcs.get_raw_pub();
+    print_hex("raw pub", edcs.get_out_buff(), edcs.get_out_size());
+    printf("outsize = %ld\n", edcs.get_out_size());
     if(edcs.sign((const unsigned char*)msg, std::strlen(msg))) std::cerr << "Sig failed\n";
+
 
     unsigned char* get = new unsigned char[edcs.get_out_size() + 1];
     size_t size = edcs.get_out_size();

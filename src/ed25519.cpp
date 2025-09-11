@@ -66,6 +66,7 @@ ErrorType Ed25519::set_raw_prv(unsigned char (&keys)[ED25519_KEY]){
 }
 
 ErrorType Ed25519::get_raw_prv(){
+    if(this->prv == nullptr) return NoPrivate;
     size_t len = 0;
     if(!EVP_PKEY_get_raw_private_key(this->prv, NULL, &len)) return NoPrivate;
     unsigned char* buff = (unsigned char*)OPENSSL_malloc(len);
@@ -115,6 +116,7 @@ ErrorType Ed25519::set_raw_pub(unsigned char (&keys)[ED25519_KEY]){
 }
 
 ErrorType Ed25519::get_raw_pub(){
+    if(this->pub == nullptr) return NoPublic;
     size_t len = 0;
     if(!EVP_PKEY_get_raw_public_key(this->pub, NULL, &len)) return NoPublic;
     unsigned char* buff = (unsigned char*)OPENSSL_malloc(len);

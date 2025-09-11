@@ -226,9 +226,24 @@ int hash_test(int argc, char** argv){
     return 0;
 }
 
+int helper_test(){
+    printf("\n");
+    Ed25519 asym;
+    asym.gen_key_pair();
+
+    auto raw = EVP2RAW_prv(asym.get_key_prv());
+    printf("\n");
+    for(const auto& elem : raw) printf("%02x", elem);
+    printf("\n");
+    auto envelope = RAW2EVP_prv(raw, "Ed25519");
+    printf("\n");
+    return 0;
+}
+
 int main(int argc, char** argv){
     hash_test(argc, argv);
     test_aes(argc, argv);
     test_sig(argc, argv);
+    helper_test();
     return test_dh(argc, argv);
 }
